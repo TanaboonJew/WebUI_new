@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="display-4">Docker Management Platform</h1>
+    
+    {% if user.is_authenticated %}
+        <div class="alert alert-success mt-4">
+            Welcome back, <strong>{{ user.username }}</strong>!
+        </div>
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Quick Actions</h5>
+                <a href="{% url 'docker-management' %}" class="btn btn-primary me-2">Manage Containers</a>
+                <a href="{% url 'file-manager' %}" class="btn btn-secondary me-2">File Manager</a>
+                <a href="{% url 'logout' %}" class="btn btn-outline-danger">Logout</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Get Started</h5>
+                <p class="card-text">Please log in or register to access the Docker management features.</p>
+                <a href="{% url 'login' %}" class="btn btn-primary me-2">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-success">Register</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

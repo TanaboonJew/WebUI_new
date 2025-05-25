@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Private Monitoring Dashboard</h2>
+    <p class="text-muted">Welcome, {{ user.username }}</p>
+    
+    <div id="public-stats">
+        {% include "core/public_dashboard.html" with stats=system_stats %}
+    </div>
+    
+    {% if container %}
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between">
+            <span>Your Container Status</span>
+            <span id="container-status" class="badge bg-{% if container.status == 'running' %}success{% else %}warning{% endif %}">
+                {{ container.status }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>CPU Usage</h5>
+                    <div class="progress">
+                        <div id="cpu-progress" class="progress-bar" role="progressbar" 
+                             style="width: {{ container_stats.cpu_percent|default:0 }}%">
+                            <span id="cpu-text">{{ container_stats.cpu_percent|default:0 }}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Memory Usage</h5>
+                    <div class="progress">
+                        <div id="memory-progress" class="progress-bar" role="progressbar" 
+                             style="width: {{ container_stats.memory_percent|default:0 }}%">
+                            <span id="memory-text">
+                                {{ container_stats.memory_usage|filesizeformat }} / {{ container_stats.memory_limit|filesizeformat }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h5>Network Activity</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <p>RX: <span id="network-rx">0</span> MB</p>
+                            <p>TX: <span id="network-tx">0</span> MB</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Container Port</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <p>HTTP: <code>localhost:{{ container.port_bindings.80_tcp }}</code></p>
+                            {% if container_stats.status == 'running' %}
+                            <a href="http://localhost:{{ container.port_bindings.80_tcp }}" 
+                               class="btn btn-sm btn-primary" target="_blank">
+                                Open Container
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning mt-4">
+        You don't have any active containers
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// System-wide monitoring
+const systemSocket = new WebSocket(
+    'ws://' + window.location.host + '/ws/monitoring/'
+);
+
+systemSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    document.querySelector('#cpu-percent').innerText = data.cpu + '%';
+    document.querySelector('#memory-percent').innerText = data.memory + '%';
+    document.querySelector('#disk-percent').innerText = data.disk + '%';
+    document.querySelector('#gpu-utilization').style.width = data.gpu_util + '%';
+    document.querySelector('#gpu-memory').style.width = data.gpu_mem + '%';
+};
+
+// Container-specific monitoring
+{% if container %}
+const containerSocket = new WebSocket(
+    'ws://' + window.location.host + '/ws/container/{{ container.container_id }}/'
+);
+
+containerSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    if(data) {
+        // Update CPU
+        const cpuProgress = document.getElementById('cpu-progress');
+        const cpuText = document.getElementById('cpu-text');
+        cpuProgress.style.width = data.cpu + '%';
+        cpuProgress.className = `progress-bar ${data.cpu > 80 ? 'bg-danger' : 'bg-primary'}`;
+        cpuText.innerText = data.cpu + '%';
+        
+        // Update Memory
+        const memProgress = document.getElementById('memory-progress');
+        const memText = document.getElementById('memory-text');
+        memProgress.style.width = data.memory_percent + '%';
+        memProgress.className = `progress-bar ${data.memory_percent > 80 ? 'bg-danger' : 'bg-success'}`;
+        memText.innerText = (data.memory_usage/1024/1024).toFixed(2) + ' MB / ' + 
+                           (data.memory_limit/1024/1024).toFixed(2) + ' MB';
+        
+        // Update Network
+        document.getElementById('network-rx').innerText = data.network_rx.toFixed(2);
+        document.getElementById('network-tx').innerText = data.network_tx.toFixed(2);
+        
+        // Update status badge
+        const statusBadge = document.getElementById('container-status');
+        statusBadge.className = `badge bg-${data.status === 'running' ? 'success' : 'warning'}`;
+        statusBadge.innerText = data.status;
+    }
+};
+{% endif %}
+</script>
+{% endblock %}
