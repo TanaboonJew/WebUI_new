@@ -2,108 +2,208 @@
 
 {% block content %}
 <div class="container mt-4">
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-    
-    <h2>System Monitoring Dashboard</h2>
-    
-    <!-- CPU Card -->
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    CPU Usage
-                </div>
-                <div class="card-body">
-                    <h1 class="display-4" id="cpu-percent">{{ stats.cpu.percent|default:0 }}%</h1>
-                    <p class="card-text">
-                        {{ stats.cpu.cores }} Cores / {{ stats.cpu.threads }} Threads
-                    </p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Memory Card -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    Memory Usage
-                </div>
-                <div class="card-body">
-                    <h1 class="display-4" id="memory-percent">{{ stats.memory.percent|default:0 }}%</h1>
-                    <p class="card-text">
-                        {{ stats.memory.used|filesizeformat }} / {{ stats.memory.total|filesizeformat }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- GPU Card (if available) -->
-    {% if stats.gpu %}
-    <div class="row">
-        <div class="col-md-12 mb-4">
-            <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    GPU Status ({{ stats.gpu.name }})
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>GPU Utilization</h5>
-                            <div class="progress">
-                                <div id="gpu-util" class="progress-bar" 
-                                     style="width: {{ stats.gpu.utilization }}%">
-                                    {{ stats.gpu.utilization }}%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>GPU Memory</h5>
-                            <div class="progress">
-                                <div id="gpu-mem" class="progress-bar" 
-                                     style="width: {{ stats.gpu.memory_percent }}%">
-                                    {{ stats.gpu.memory_used }}MB / {{ stats.gpu.memory_total }}MB
-                                </div>
-                            </div>
-                        </div>
+    {% if not request.user.is_authenticated %}
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <h2>System Monitoring Dashboard</h2>
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        CPU Usage
                     </div>
-                    <p class="mt-3">
-                        Temperature: <span id="gpu-temp">{{ stats.gpu.temperature }}</span>°C
-                    </p>
+                    <div class="card-body">
+                        <h1 class="display-4" id="cpu-percent">{{ stats.cpu.percent|default:0 }}%</h1>
+                        <p class="card-text">
+                            {{ stats.cpu.cores }} Cores / {{ stats.cpu.threads }} Threads
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- Disk Usage -->
-    <div class="row">
-        <div class="col-md-12 mb-4">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    Disk Usage
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-9">
-                            <h1 class="display-4" id="disk-percent">{{ stats.disk.percent|default:0 }}%</h1>
-                            <p class="card-text">
-                                {{ stats.disk.used|filesizeformat }} / {{ stats.disk.total|filesizeformat }}
+            
+        {% if stats.gpu %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            GPU Status ({{ stats.gpu.name }})
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5>GPU Utilization</h5>
+                                    <div class="progress">
+                                        <div id="gpu-util" class="progress-bar" 
+                                            style="width: {{ stats.gpu.utilization }}%">
+                                            {{ stats.gpu.utilization }}%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>GPU Memory</h5>
+                                    <div class="progress">
+                                        <div id="gpu-mem" class="progress-bar" 
+                                            style="width: {{ stats.gpu.memory_percent }}%">
+                                            {{ stats.gpu.memory_used }}MB / {{ stats.gpu.memory_total }}MB
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mt-3">
+                                Temperature: <span id="gpu-temp">{{ stats.gpu.temperature }}</span>°C
                             </p>
                         </div>
-                        <div class="col-md-3">
-                            <canvas id="diskChart" width="200" height="200"></canvas>
+                    </div>
+                </div>
+        {% endif %}
+
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        Memory Usage
+                    </div>
+                    <div class="card-body">
+                        <h1 class="display-4" id="memory-percent">{{ stats.memory.percent|default:0 }}%</h1>
+                        <p class="card-text">
+                            {{ stats.memory.used|filesizeformat }} / {{ stats.memory.total|filesizeformat }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        Disk Usage
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h1 class="display-4" >{{ stats.disk.percent|default:0 }}%</h1>
+                                <p class="card-text">
+                                    {{ stats.disk.used|filesizeformat }} / {{ stats.disk.total|filesizeformat }}
+                                </p>
+                            </div>
+                            <div class="col-md-3">
+                                <canvas id="diskChart" width="200" height="100"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+    {% else %}
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <h2>System Monitoring Dashboard</h2>
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card mb-3" style="height: 200px;">
+                    <div class="card-header bg-primary text-white">
+                        CPU Usage
+                    </div>
+                    <div class="card-body">
+                        <h1 class="display-4" id="cpu-percent">{{ stats.cpu.percent|default:0 }}%</h1>
+                        <p class="card-text">
+                            {{ stats.cpu.cores }} Cores / {{ stats.cpu.threads }} Threads
+                        </p>
+                    </div>
+                </div>
+                <div class="card" style="height: 200px;">
+                    <div class="card-header bg-primary text-white">
+                        CPU Usage
+                    </div>
+                    <div class="card-body">
+                        <h1 class="display-4" id="cpu-percent">{{ stats.cpu.percent|default:0 }}%</h1>
+                        <p class="card-text">
+                            {{ stats.cpu.cores }} Cores / {{ stats.cpu.threads }} Threads
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if stats.gpu %}
+            <div class="col-md-6 mb-4">
+                <div class="card" style="height: 415px;">
+                    <div class="card-header bg-warning">
+                        GPU Status ({{ stats.gpu.name }})
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 fs-5 mt-2">
+                                <h5>GPU Utilization</h5>
+                                <div class="progress mt-4">
+                                    <div class="progress-bar" role="progressbar" 
+                                        style="width: {{ stats.gpu.utilization }}%">
+                                        {{ stats.gpu.utilization }}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 fs-5 mt-4">
+                                <h5>GPU Memory</h5>
+                                <div class="progress mt-4">
+                                    <div class="progress-bar" role="progressbar" 
+                                        style="width: {{ stats.gpu.memory_percent }}%">
+                                        {{ stats.gpu.memory_used }}MB / {{ stats.gpu.memory_total }}MB
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4">Temperature: {{ stats.gpu.temperature }}°C</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            
+            <div class="col-md-9 mb-4">
+                <div class="card" style="height: 300px;">
+                    <div class="card-header bg-success text-white">
+                        Memory Usage
+                    </div>
+                    <div class="card-body">
+                        <h1 class="display-4" id="memory-percent">{{ stats.memory.percent|default:0 }}%</h1>
+                        <p class="card-text">
+                            {{ stats.memory.used|filesizeformat }} / {{ stats.memory.total|filesizeformat }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <canvas id="MemoryPercent" width="300" height="300"></canvas>
+            </div>
+
+            <div class="col-md-9 mb-4">
+                <div class="card" style="height: 300px;">
+                    <div class="card-header bg-info text-white">
+                        Disk Usage
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h1 class="display-4" >{{ stats.disk.percent|default:0 }}%</h1>
+                                <p class="card-text">
+                                    {{ stats.disk.used|filesizeformat }} / {{ stats.disk.total|filesizeformat }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <canvas id="diskChart" width="300" height="300"></canvas>
+            </div>
+
+        </div>
+    {% endif %}
 </div>
 
 <!-- WebSocket for real-time updates -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const socket = new WebSocket("{{ websocket_url }}");
 
@@ -131,6 +231,31 @@ socket.onmessage = function(e) {
 };
 
 // Initialize disk chart
+const memoryCtx = document.getElementById('MemoryPercent').getContext('2d');
+const memoryPercent = {{ stats.memory.percent|default:"0" }};
+let MemoryPercent = new Chart(memoryCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Used', 'Free'],
+        datasets: [{
+            data: [memoryPercent, 100 - memoryPercent],
+            backgroundColor: [
+                'rgba(228, 235, 26, 0.7)',
+                'rgba(20, 238, 67, 0.5)'
+            ]
+        }]
+    },
+    options: {
+        responsive: false,
+        maintainAspectRatio: false
+    }
+});
+
+function updateMemoryPercent(percent) {
+    MemoryPercent.data.datasets[0].data = [percent, 100 - percent];
+    MemoryPercent.update();
+}
+
 const diskCtx = document.getElementById('diskChart').getContext('2d');
 let diskChart = new Chart(diskCtx, {
     type: 'doughnut',
@@ -140,7 +265,7 @@ let diskChart = new Chart(diskCtx, {
             data: [{{ stats.disk.percent|default:0 }}, {{ stats.disk.free_percent|default:100 }}],
             backgroundColor: [
                 'rgba(54, 162, 235, 0.7)',
-                'rgba(200, 200, 200, 0.5)'
+                'rgba(238, 20, 20, 0.5)'
             ]
         }]
     },
