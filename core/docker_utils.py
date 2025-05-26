@@ -81,10 +81,11 @@ class DockerManager:
             logger.error(f"Build failed: {str(e)}")
             return None, str(e)
 
-    def create_container(self, user: CustomUser, image_name: str, container_type: str = 'default') -> Optional[str]:
-        """Create and start a container for the user"""
+    def create_container(self, user: CustomUser, image_name: str, container_type: str = 'default') -> Tuple[Optional[str], Optional[str]]:
+        """Create and start a container for the user
+        Returns tuple of (url, token) or (None, None) on failure"""
         if not self.client:
-            return None
+            return None, None
 
         try:
             dirs = self._prepare_user_directories(user)
@@ -128,40 +129,7 @@ class DockerManager:
                     }
                 )
                 
-                return f"http://localhost:{port}/?token={token}"
-            
-            else:
-                # For regular containers
-                self.client.images.pull(image_name)
-                port = self._get_available_port()
-                
-                container = self.client.containers.run(
-                    image=image_name,
-                    name=container_name,
-                    volumes={
-                        self._get_user_workspace(user): {'bind': '/workspace', 'mode': 'rw'}
-                    },
-                    ports={'80/tcp': port},
-                    detach=True,
-                    mem_limit=f"{user.ram_limit}m",
-                    cpu_shares=int(user.cpu_limit * 1024),
-                    runtime='nvidia' if user.gpu_access else None
-                )
-                
-                DockerContainer.objects.create(
-                    user=user,
-                    container_id=container.id,
-                    image_name=image_name,
-                    status='running',
-                    port_bindings={'80_tcp': port},
-                    resource_limits={
-                        'cpu': user.cpu_limit,
-                        'ram': user.ram_limit,
-                        'gpu': user.gpu_access
-                    }
-                )
-                
-                return container.id
+                return f"http://localhost:{port}/?token={token}", token
                 
         except Exception as e:
             logger.error(f"Container creation failed: {e}")

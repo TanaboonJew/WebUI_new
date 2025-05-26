@@ -4,15 +4,15 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 import docker
 import asyncio
+from .models import DockerContainer
 
 class MonitoringConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        from .models import DockerContainer # import here to not create import loop
         await self.accept()
         while True:
             data = await self.get_system_stats()
             await self.send(text_data=json.dumps(data))
-            await asyncio.sleep(2)  # Update every 2 seconds
+            await asyncio.sleep(2)
 
     @database_sync_to_async
     def get_system_stats(self):
@@ -25,7 +25,7 @@ class MonitoringConsumer(AsyncWebsocketConsumer):
         }
         return stats
 
-class ContainerConsumer(AsyncWebsocketConsumer):
+class ContainerConsumer(AsyncWebsocketConsumer):  # Add this class
     async def connect(self):
         self.container_id = self.scope['url_route']['kwargs']['container_id']
         await self.accept()
@@ -34,7 +34,7 @@ class ContainerConsumer(AsyncWebsocketConsumer):
             data = await self.get_container_stats()
             if data:
                 await self.send(text_data=json.dumps(data))
-            await asyncio.sleep(1)  # Update every second
+            await asyncio.sleep(1)
 
     @database_sync_to_async
     def get_container_stats(self):
@@ -43,7 +43,6 @@ class ContainerConsumer(AsyncWebsocketConsumer):
             container = client.containers.get(self.container_id)
             stats = container.stats(stream=False)
             
-            # CPU calculation
             cpu_stats = stats['cpu_stats']
             cpu_delta = cpu_stats['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage']
             system_delta = cpu_stats['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage']
@@ -54,5 +53,6 @@ class ContainerConsumer(AsyncWebsocketConsumer):
                 'memory': stats['memory_stats']['usage'] / (1024 * 1024),  # MB
                 'network': stats['networks']['eth0']['rx_bytes'] / (1024 * 1024)  # MB
             }
-        except:
+        except Exception as e:
+            print(f"Container stats error: {str(e)}")
             return None

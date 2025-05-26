@@ -2,8 +2,6 @@ import psutil
 import docker
 from docker.errors import DockerException
 import subprocess
-import json
-from humanize import naturalsize
 from .models import DockerContainer
 
 try:

@@ -139,11 +139,27 @@ def delete_file(request, file_id):
 
 
 def public_dashboard(request):
-    """Public system monitoring dashboard"""
-    stats = get_system_stats()
-    return render(request, 'core/public_dashboard.html', {
-        'stats': stats
-    })
+    """Public system monitoring dashboard - accessible to all users"""
+    try:
+        stats = get_system_stats()
+        
+        # Calculate free disk percentage
+        if stats and 'disk' in stats:
+            disk_percent = stats['disk'].get('percent', 0)
+            stats['disk']['free_percent'] = 100 - disk_percent
+        
+        context = {
+            'stats': stats,
+            'websocket_url': f"ws://{request.get_host()}/ws/monitoring/",
+            'show_public': True  # Always show public dashboard
+        }
+        return render(request, 'core/public_dashboard.html', context)
+    except Exception as e:
+        print(f"Monitoring error: {str(e)}")
+        return render(request, 'core/public_dashboard.html', {
+            'error': "Could not load monitoring data",
+            'show_public': True
+        })
 
 
 @login_required
@@ -167,7 +183,7 @@ def private_dashboard(request):
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
-    jupyter_url = None
+    jupyter_token = None
     jupyter_running = False
     
     if request.method == 'POST':
@@ -178,6 +194,9 @@ def ai_dashboard(request):
             )
             if jupyter_url:
                 messages.success(request, "Jupyter Notebook started successfully")
+                # Extract token from URL
+                if '?token=' in jupyter_url:
+                    jupyter_token = jupyter_url.split('?token=')[1]
             else:
                 messages.error(request, "Failed to start Jupyter Notebook")
         
@@ -201,11 +220,18 @@ def ai_dashboard(request):
         user=request.user,
         image_name="jupyter/tensorflow-notebook"
     ).first()
+    
     jupyter_running = container and container.status == 'running'
+    jupyter_url = container.get_absolute_url() if container else None
+    
+    # Extract token if URL exists
+    if jupyter_url and '?token=' in jupyter_url:
+        jupyter_token = jupyter_url.split('?token=')[1]
     
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
-        'jupyter_url': container.get_absolute_url() if container else None,
+        'jupyter_url': jupyter_url,
+        'jupyter_token': jupyter_token,
         'jupyter_running': jupyter_running,
         'form': AIModelForm()
     })
