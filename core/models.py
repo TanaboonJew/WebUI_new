@@ -62,7 +62,12 @@ class UserFile(models.Model):
         verbose_name_plural = 'User Files'
 
     def filename(self):
-        return os.path.basename(self.file.name)
+        parts = self.file.name.split('/')
+        user_folder_prefix = f"user_{self.user.id}_({self.user.username})"
+        if len(parts) > 2 and parts[0] == user_folder_prefix and parts[1] == 'userfiles':
+            return '/'.join(parts[2:])
+        else:
+            return self.file.name
 
     def __str__(self):
         return self.filename()

@@ -8,6 +8,7 @@ from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm
 from .monitoring import get_system_stats, get_user_container_stats
 from django.contrib import messages
 from django.conf import settings
+from collections import defaultdict
 import os
 
 
@@ -61,32 +62,28 @@ def docker_management(request):
 
 @login_required
 def file_manager(request):
-    ensure_workspace_exists(request.user)
     files = UserFile.objects.filter(user=request.user)
 
     if request.method == 'POST':
-        user_workspace = ensure_workspace_exists(request.user)
         uploaded_files = request.FILES.getlist('files')
+        folder_name = request.POST.get('folder_name', '').strip()
 
         for uploaded_file in uploaded_files:
-            rel_path = uploaded_file.name  # includes folder path
-            abs_path = os.path.join(user_workspace, rel_path)
-
-            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
-
-            with open(abs_path, 'wb+') as destination:
-                for chunk in uploaded_file.chunks():
-                    destination.write(chunk)
-
-            # Save relative path in DB
-            relative_media_path = os.path.relpath(abs_path, settings.MEDIA_ROOT)
-            UserFile.objects.create(user=request.user, file=relative_media_path)
+            if folder_name:
+                relative_path = os.path.join(folder_name, uploaded_file.name)
+            else:
+                relative_path = uploaded_file.name  
+                
+            user_file = UserFile(user=request.user)
+            
+            user_file.file.save(relative_path, uploaded_file)
+            user_file.save()
 
         messages.success(request, "Files/folders uploaded successfully")
         return redirect('file-manager')
 
     return render(request, 'core/file_manager.html', {
-        'files': files
+        'files': files,
     })
 
 

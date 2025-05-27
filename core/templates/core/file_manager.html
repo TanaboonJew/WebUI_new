@@ -5,36 +5,37 @@
 
 <div class="container mt-4">
     <h2>File Manager</h2>
-    
+
     <div class="card shadow-sm mb-4 mt-4">
         <div class="card-header bg-primary text-white">
             <i class="fas fa-upload me-2"></i> Upload Files or Folders
         </div>
         <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="upload-form">
                 {% csrf_token %}
-    
+
                 <label class="form-label">Upload individual files</label>
-                <input type="file" name="files" multiple class="form-control mb-3">
-    
+                <input type="file" name="files" multiple class="form-control mb-3" id="file-upload">
+
                 <label class="form-label">Or upload a folder</label>
-                <input type="file" name="files" webkitdirectory directory multiple class="form-control mb-3">
-    
+                <!-- input สำหรับชื่อโฟลเดอร์ -->
+                <input type="text" name="folder_name" class="form-control mb-2" placeholder="Enter folder name (required if uploading folder)" id="folder-name" disabled>
+
+                <input type="file" name="files" webkitdirectory directory multiple class="form-control mb-3" id="folder-upload">
+
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-cloud-upload-alt me-1"></i> Upload
                 </button>
             </form>
         </div>
     </div>
-    
-    
-    
+
     {% if files %}
-    <div  class="table-responsive card shadow-sm">
-        <table class="table align-middle table-striped table-hover ">
+    <div class="table-responsive card shadow-sm">
+        <table class="table align-middle table-striped table-hover">
             <thead class="table-dark">
                 <tr>
-                    <th scope="col" ><i class="fas fa-folder-open me-2"></i>Filename</th>
+                    <th scope="col"><i class="fas fa-folder-open me-2"></i>Filename</th>
                     <th scope="col"><i class="fas fa-upload me-2"></i>Uploaded</th>
                     <th scope="col">Actions</th>
                 </tr>
@@ -77,8 +78,7 @@
                         <button class="btn btn-sm btn-info" onclick="fileAction('{{ file.id }}', 'copy')"><i class="fas fa-copy"></i></button>
                         <button class="btn btn-sm btn-secondary" onclick="fileAction('{{ file.id }}', 'cut')"><i class="fas fa-cut"></i></button>
                         <button class="btn btn-sm btn-dark" onclick="fileAction('{{ file.id }}', 'paste')"><i class="fas fa-paste"></i></button>
-                        <a href="{% url 'delete-file' file.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ file.filename }}?')"><i class="fas fa-trash-alt"></i></a>                    
-                    </a>
+                        <a href="{% url 'delete-file' file.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ file.filename }}?')"><i class="fas fa-trash-alt"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -88,6 +88,7 @@
     {% else %}
     <p>No files uploaded yet</p>
     {% endif %}
+
     <script>
         function fileAction(fileId, action) {
             let payload = {
@@ -117,6 +118,32 @@
                     alert(data.error || "Action failed");
                 }
             });
-        </script>        
+    </script>     
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileUpload = document.getElementById('file-upload');
+        const folderUpload = document.getElementById('folder-upload');
+        const folderNameInput = document.getElementById('folder-name');
+
+        fileUpload.addEventListener('change', function () {
+            if (fileUpload.files.length > 0) {
+                folderNameInput.value = '';
+                folderNameInput.disabled = true;
+                folderUpload.value = '';
+            }
+        });
+
+        folderUpload.addEventListener('change', function () {
+            if (folderUpload.files.length > 0) {
+                folderNameInput.disabled = false;
+                fileUpload.value = '';
+            } else {
+                folderNameInput.value = '';
+                folderNameInput.disabled = true;
+            }
+        });
+    });
+    </script>
+
 </div>
 {% endblock %}
