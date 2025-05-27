@@ -50,6 +50,7 @@ def docker_management(request):
                 else:
                     messages.error(request, f"Build failed: {logs}")
         else:
+            form = DockerfileUploadForm()  # <-- Fix: define fallback form
             messages.error(request, "Invalid form submission")
     else:
         form = DockerfileUploadForm()

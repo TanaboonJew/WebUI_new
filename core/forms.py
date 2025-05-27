@@ -9,7 +9,7 @@ class DockerfileUploadForm(forms.ModelForm):
         widgets = {
             'dockerfile': forms.FileInput(attrs={
                 'class': 'form-control',
-                'accept': '.dockerfile,.Dockerfile'
+                'accept': 'dockerfile,Dockerfile'
             })
         }
         help_texts = {
