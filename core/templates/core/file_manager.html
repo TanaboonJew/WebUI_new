@@ -78,7 +78,6 @@
                         <button class="btn btn-sm btn-secondary" onclick="fileAction('{{ file.id }}', 'cut')"><i class="fas fa-cut"></i></button>
                         <button class="btn btn-sm btn-dark" onclick="fileAction('{{ file.id }}', 'paste')"><i class="fas fa-paste"></i></button>
                         <a href="{% url 'delete-file' file.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ file.filename }}?')"><i class="fas fa-trash-alt"></i></a>                    
-                        <i class="fas fa-trash-alt"></i>
                     </a>
                     </td>
                 </tr>
