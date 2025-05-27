@@ -73,7 +73,11 @@
                     <td>{{ file.uploaded_at }}</td>
                     <td>
                         <a href="{% url 'download-file' file.id %}" class="btn btn-sm btn-success"><i class="fas fa-download"></i></a>
-                        <a href="{% url 'delete-file' file.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure.You want to delete this File: {{ file.filename }} ?')" >
+                        <button class="btn btn-sm btn-warning" onclick="fileAction('{{ file.id }}', 'rename')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-info" onclick="fileAction('{{ file.id }}', 'copy')"><i class="fas fa-copy"></i></button>
+                        <button class="btn btn-sm btn-secondary" onclick="fileAction('{{ file.id }}', 'cut')"><i class="fas fa-cut"></i></button>
+                        <button class="btn btn-sm btn-dark" onclick="fileAction('{{ file.id }}', 'paste')"><i class="fas fa-paste"></i></button>
+                        <a href="{% url 'delete-file' file.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ file.filename }}?')"><i class="fas fa-trash-alt"></i></a>                    
                         <i class="fas fa-trash-alt"></i>
                     </a>
                     </td>
@@ -85,5 +89,36 @@
     {% else %}
     <p>No files uploaded yet</p>
     {% endif %}
+    <script>
+        function fileAction(fileId, action) {
+            let payload = {
+                file_id: fileId,
+                action: action,
+            };
+        
+            if (action === 'rename') {
+                const newName = prompt("Enter new filename:");
+                if (!newName) return;
+                payload['new_name'] = newName;
+            }
+        
+            fetch("{% url 'file-action' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || "Action failed");
+                }
+            });
+        }
+        </script>        
 </div>
 {% endblock %}

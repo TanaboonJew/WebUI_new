@@ -299,6 +299,76 @@ def build_container(request):
     
     return render(request, 'core/build_container.html', {'form': form})
 
+from django.http import JsonResponse
+import shutil
+
+def get_clipboard(request):
+    return request.session.get('clipboard', {})
+
+def set_clipboard(request, action, src_path):
+    request.session['clipboard'] = {'action': action, 'src': src_path}
+
+def clear_clipboard(request):
+    if 'clipboard' in request.session:
+        del request.session['clipboard']
+
+
+@login_required
+def file_action(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        file_id = request.POST.get('file_id')
+
+        try:
+            file_obj = UserFile.objects.get(id=file_id, user=request.user)
+            file_path = file_obj.file.path
+
+            if action in ['cut', 'copy']:
+                set_clipboard(request, action, file_path)
+                return JsonResponse({'success': True})
+
+            elif action == 'paste':
+                clipboard = get_clipboard(request)
+                if not clipboard:
+                    return JsonResponse({'success': False, 'error': 'Clipboard empty'})
+                
+                dest_dir = os.path.dirname(file_path)
+                filename = os.path.basename(clipboard['src'])
+                dest_path = os.path.join(dest_dir, filename)
+
+                if clipboard['action'] == 'copy':
+                    if os.path.isdir(clipboard['src']):
+                        shutil.copytree(clipboard['src'], dest_path)
+                    else:
+                        shutil.copy2(clipboard['src'], dest_path)
+
+                elif clipboard['action'] == 'cut':
+                    shutil.move(clipboard['src'], dest_path)
+                    clear_clipboard(request)
+
+                return JsonResponse({'success': True})
+
+            elif action == 'rename':
+                new_name = request.POST.get('new_name')
+                new_path = os.path.join(os.path.dirname(file_path), new_name)
+                os.rename(file_path, new_path)
+                file_obj.file.name = os.path.relpath(new_path, settings.MEDIA_ROOT)
+                file_obj.save()
+                return JsonResponse({'success': True})
+
+            elif action == 'move':
+                new_path = request.POST.get('new_path')
+                shutil.move(file_path, new_path)
+                file_obj.file.name = os.path.relpath(new_path, settings.MEDIA_ROOT)
+                file_obj.save()
+                return JsonResponse({'success': True})
+
+        except UserFile.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'File not found'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
 # temp for debug
 from django.http import HttpResponse
 
