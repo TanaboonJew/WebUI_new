@@ -7,6 +7,7 @@ from .models import DockerContainer, UserFile, AIModel
 from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm
 from .monitoring import get_system_stats, get_user_container_stats
 from django.contrib import messages
+from django.conf import settings
 import os
 
 
