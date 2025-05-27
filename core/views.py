@@ -62,22 +62,32 @@ def docker_management(request):
 def file_manager(request):
     ensure_workspace_exists(request.user)
     files = UserFile.objects.filter(user=request.user)
-    
+
     if request.method == 'POST':
-        form = FileUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_file = form.save(commit=False)
-            new_file.user = request.user
-            new_file.save()
-            messages.success(request, "File uploaded successfully")
-            return redirect('file-manager')
-    else:
-        form = FileUploadForm()
-    
+        user_workspace = ensure_workspace_exists(request.user)
+        uploaded_files = request.FILES.getlist('files')
+
+        for uploaded_file in uploaded_files:
+            rel_path = uploaded_file.name  # includes folder path
+            abs_path = os.path.join(user_workspace, rel_path)
+
+            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+
+            with open(abs_path, 'wb+') as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+
+            # Save relative path in DB
+            relative_media_path = os.path.relpath(abs_path, settings.MEDIA_ROOT)
+            UserFile.objects.create(user=request.user, file=relative_media_path)
+
+        messages.success(request, "Files/folders uploaded successfully")
+        return redirect('file-manager')
+
     return render(request, 'core/file_manager.html', {
-        'form': form,
         'files': files
     })
+
 
 
 @login_required

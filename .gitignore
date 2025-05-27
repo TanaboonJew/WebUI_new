@@ -187,4 +187,7 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-/user_data/
+user_data/
+DATA_for_test/
+a.py
+b.py
