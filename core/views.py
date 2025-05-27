@@ -196,7 +196,8 @@ def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
     jupyter_token = None
     jupyter_running = False
-    
+    jupyter_url = None
+
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
             jupyter_url = docker_manager.create_container(
@@ -206,7 +207,6 @@ def ai_dashboard(request):
             )
             if jupyter_url:
                 messages.success(request, "Jupyter Notebook started successfully")
-                # Extract token from URL
                 if '?token=' in jupyter_url:
                     jupyter_token = jupyter_url.split('?token=')[1]
             else:
@@ -226,26 +226,28 @@ def ai_dashboard(request):
                 model.save()
                 messages.success(request, "Model uploaded successfully")
                 return redirect('ai-dashboard')
-    
-    # Check if Jupyter is running
+            else:
+                messages.error(request, "Failed to upload model. Please check the form.")
+    else:
+        form = AIModelForm()
+
     container = DockerContainer.objects.filter(
         user=request.user,
         image_name="jupyter/tensorflow-notebook"
     ).first()
     
-    jupyter_running = container and container.status == 'running'
-    jupyter_url = container.get_absolute_url() if container else None
-    
-    # Extract token if URL exists
-    if jupyter_url and '?token=' in jupyter_url:
-        jupyter_token = jupyter_url.split('?token=')[1]
+    if container and container.status == 'running':
+        jupyter_running = True
+        jupyter_url = container.get_absolute_url()
+        if jupyter_url and '?token=' in jupyter_url:
+            jupyter_token = jupyter_url.split('?token=')[1]
     
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'jupyter_url': jupyter_url,
         'jupyter_token': jupyter_token,
         'jupyter_running': jupyter_running,
-        'form': AIModelForm()
+        'form': form
     })
 
 

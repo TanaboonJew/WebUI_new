@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load custom_filters %}
 
 {% block content %}
 <div class="container mt-4">
@@ -15,7 +16,7 @@
                 <div class="card-body">
                     {% if jupyter_url %}
                     <div class="alert alert-success">
-                        Notebook is running! Token: <code>{{ jupyter_url|split:"?token="|last }}</code>
+                        Notebook is running! Token: <code>{{ jupyter_token }}</code>
                     </div>
                     <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
                         <i class="fas fa-external-link-alt"></i> Open Notebook
