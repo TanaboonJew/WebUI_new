@@ -4,13 +4,12 @@ from django.http import FileResponse, Http404
 from .docker_utils import docker_manager
 from .file_utils import ensure_workspace_exists
 from .models import DockerContainer, UserFile, AIModel
-from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm
+from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm, DockerImageForm
 from .monitoring import get_system_stats, get_user_container_stats
 from django.contrib import messages
 from django.conf import settings
 from collections import defaultdict
 import os
-
 
 def home(request):
     """Home page view that shows different content based on authentication status"""
@@ -20,26 +19,32 @@ def home(request):
 @login_required
 def docker_management(request):
     user_container = DockerContainer.objects.filter(user=request.user).first()
-    
+    dockerfile_form = DockerfileUploadForm()
+    image_form = DockerImageForm()
+
     if request.method == 'POST':
         form_type = request.POST.get('form_type')
-        
-        if form_type == 'image':
-            form = DockerfileUploadForm(request.POST, request.FILES)
-            if form.is_valid():
-                dockerfile = form.save(commit=False)
-                dockerfile.user = request.user
-                dockerfile.save()
-                
+
+        if form_type == 'dockerfile':
+            dockerfile_form = DockerfileUploadForm(request.POST, request.FILES)
+            if dockerfile_form.is_valid():
+                dockerfile = dockerfile_form.cleaned_data['dockerfile']
+                workspace = ensure_workspace_exists(request.user)
+                dockerfile_path = os.path.join(workspace, dockerfile.name)
+
+                with open(dockerfile_path, 'wb+') as dest:
+                    for chunk in dockerfile.chunks():
+                        dest.write(chunk)
+
                 image_id, logs = docker_manager.build_from_dockerfile(
                     request.user,
-                    dockerfile.dockerfile.path
+                    dockerfile_path
                 )
-                
+
                 if image_id:
                     container_url = docker_manager.create_container(
                         request.user,
-                        image_id=image_id,
+                        image_name=image_id,
                         container_type='custom'
                     )
                     if container_url:
@@ -49,17 +54,32 @@ def docker_management(request):
                         messages.error(request, "Failed to start container")
                 else:
                     messages.error(request, f"Build failed: {logs}")
+
+        elif form_type == 'image':
+            image_form = DockerImageForm(request.POST)
+            if image_form.is_valid():
+                image_name = image_form.cleaned_data['image_name']
+                container_url = docker_manager.create_container(
+                    request.user,
+                    image_name=image_name,
+                    container_type='image'
+                )
+                if container_url:
+                    messages.success(request, "Container created from image successfully!")
+                    return redirect('docker-management')
+                else:
+                    messages.error(request, "Failed to create container from image")
+
         else:
-            form = DockerfileUploadForm()  # <-- Fix: define fallback form
             messages.error(request, "Invalid form submission")
-    else:
-        form = DockerfileUploadForm()
-    
+
     return render(request, 'core/docker_management.html', {
-        'form': form,
-        'container': user_container
+        'container': user_container,
+        'dockerfile_form': dockerfile_form,
+        'image_form': image_form
     })
 
+    
 
 @login_required
 def file_manager(request):
@@ -69,15 +89,24 @@ def file_manager(request):
         uploaded_files = request.FILES.getlist('files')
         folder_name = request.POST.get('folder_name', '').strip()
 
+        workspace = ensure_workspace_exists(request.user)
+
         for uploaded_file in uploaded_files:
             if folder_name:
+                save_path = os.path.join(workspace, folder_name, uploaded_file.name)
                 relative_path = os.path.join(folder_name, uploaded_file.name)
             else:
-                relative_path = uploaded_file.name  
-                
+                save_path = os.path.join(workspace, uploaded_file.name)
+                relative_path = uploaded_file.name
+
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+            with open(save_path, 'wb+') as dest:
+                for chunk in uploaded_file.chunks():
+                    dest.write(chunk)
+
             user_file = UserFile(user=request.user)
-            
-            user_file.file.save(relative_path, uploaded_file)
+            user_file.file.name = os.path.join(f'user_{request.user.id}_{request.user.username}', relative_path)
             user_file.save()
 
         messages.success(request, "Files/folders uploaded successfully")
@@ -86,7 +115,6 @@ def file_manager(request):
     return render(request, 'core/file_manager.html', {
         'files': files,
     })
-
 
 
 @login_required
@@ -199,52 +227,52 @@ def ai_dashboard(request):
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
-            jupyter_url = docker_manager.create_container(
+            container_result = docker_manager.create_container(
                 request.user,
                 image_name='jupyter/tensorflow-notebook',
                 container_type='jupyter'
             )
-            if jupyter_url:
-                messages.success(request, "Jupyter Notebook started successfully")
-                if '?token=' in jupyter_url:
-                    jupyter_token = jupyter_url.split('?token=')[1]
+
+            if container_result:
+                if isinstance(container_result, tuple) and len(container_result) == 2:
+                    jupyter_url, jupyter_token = container_result
+                else:
+                    jupyter_url = container_result
+                    jupyter_token = None
+
+                messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")
             else:
                 messages.error(request, "Failed to start Jupyter Notebook")
-        
+
         elif 'stop_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'stop', container_type='jupyter'):
                 messages.success(request, "Jupyter Notebook stopped successfully")
             else:
                 messages.error(request, "Failed to stop Jupyter Notebook")
-        
+
         elif 'upload_model' in request.POST:
             form = AIModelForm(request.POST, request.FILES)
             if form.is_valid():
-                model = form.save(commit=False)
-                model.user = request.user
+                model_file = form.cleaned_data['model_file']
+                workspace = ensure_workspace_exists(request.user)
+                save_path = os.path.join(workspace, model_file.name)
+
+                with open(save_path, 'wb+') as dest:
+                    for chunk in model_file.chunks():
+                        dest.write(chunk)
+
+                model = AIModel(user=request.user)
+                model.model_file.name = os.path.join(f'user_{request.user.id}_{request.user.username}', model_file.name)
                 model.save()
+
                 messages.success(request, "Model uploaded successfully")
                 return redirect('ai-dashboard')
-            else:
-                messages.error(request, "Failed to upload model. Please check the form.")
 
-    container = DockerContainer.objects.filter(
-        user=request.user,
-        image_name="jupyter/tensorflow-notebook"
-    ).first()
-    
-    if container and container.status == 'running':
-        jupyter_running = True
-        jupyter_url = container.get_absolute_url()
-        if jupyter_url and '?token=' in jupyter_url:
-            jupyter_token = jupyter_url.split('?token=')[1]
-    
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
-        'jupyter_url': jupyter_url,
+        'form': form,
         'jupyter_token': jupyter_token,
-        'jupyter_running': jupyter_running,
-        'form': form
+        'jupyter_url': jupyter_url,
     })
 
 

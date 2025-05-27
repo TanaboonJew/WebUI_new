@@ -58,10 +58,13 @@ class DockerManager:
         try:
             container_name = f"user_{user.id}_{user.username}"
             build_logs = []
-            
+
+            # Ensure workspace exists
+            workspace_dir = self._get_user_workspace(user)
+
             image, logs = self.client.images.build(
-                path=os.path.dirname(dockerfile_path),
-                dockerfile=os.path.basename(dockerfile_path),
+                path=workspace_dir,
+                dockerfile=os.path.relpath(dockerfile_path, workspace_dir),
                 tag=f"{container_name}:latest",
                 rm=True,
                 forcerm=True,
@@ -70,13 +73,13 @@ class DockerManager:
                     'USERNAME': user.username
                 }
             )
-            
+
             for log in logs:
                 if 'stream' in log:
                     build_logs.append(log['stream'].strip())
-            
+
             return image.id, "\n".join(build_logs)
-            
+
         except Exception as e:
             logger.error(f"Build failed: {str(e)}")
             return None, str(e)
