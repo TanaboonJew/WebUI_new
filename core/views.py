@@ -197,6 +197,7 @@ def ai_dashboard(request):
     jupyter_token = None
     jupyter_running = False
     jupyter_url = None
+    form = AIModelForm()
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
@@ -228,8 +229,6 @@ def ai_dashboard(request):
                 return redirect('ai-dashboard')
             else:
                 messages.error(request, "Failed to upload model. Please check the form.")
-    else:
-        form = AIModelForm()
 
     container = DockerContainer.objects.filter(
         user=request.user,
