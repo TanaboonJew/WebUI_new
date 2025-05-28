@@ -204,22 +204,8 @@ class DockerManager:
         except Exception as e:
             logger.error(f"Stats collection failed: {e}")
             return None
-
-
-# Global instance for convenience
-docker_manager = DockerManager()
-
-# Legacy functions for backward compatibility
-def create_container(user: CustomUser, image_name: str, container_type: str = 'default') -> Optional[str]:
-    return docker_manager.create_container(user, image_name, container_type)
-
-def manage_container(user: CustomUser, action: str, container_type: str = 'default') -> bool:
-    return docker_manager.manage_container(user, action, container_type)
-
-def get_container_stats(container_id: str) -> Optional[Dict]:
-    return docker_manager.get_container_stats(container_id)
-
-def start_or_resume_container(self, user: CustomUser, image_name: str, container_type: str = 'jupyter') -> Tuple[Optional[str], Optional[str]]:
+        
+    def start_or_resume_container(self, user: CustomUser, image_name: str, container_type: str = 'jupyter') -> Tuple[Optional[str], Optional[str]]:
     """Start or resume a user's container, preferring reuse"""
     if not self.client:
         return None, None
@@ -257,3 +243,19 @@ def start_or_resume_container(self, user: CustomUser, image_name: str, container
     except Exception as e:
         logger.error(f"start_or_resume_container failed: {e}")
         return None, None
+
+
+# Global instance for convenience
+docker_manager = DockerManager()
+
+# Legacy functions for backward compatibility
+def create_container(user: CustomUser, image_name: str, container_type: str = 'default') -> Optional[str]:
+    return docker_manager.create_container(user, image_name, container_type)
+
+def manage_container(user: CustomUser, action: str, container_type: str = 'default') -> bool:
+    return docker_manager.manage_container(user, action, container_type)
+
+def get_container_stats(container_id: str) -> Optional[Dict]:
+    return docker_manager.get_container_stats(container_id)
+
+
