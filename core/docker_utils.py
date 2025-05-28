@@ -186,7 +186,7 @@ class DockerManager:
         container_name = f"{container_type}_{user.id}_{user.username}"
 
         try:
-            db_container = DockerContainer.objects.filter(user=user, container_type=container_type).first()
+            db_container = DockerContainer.objects.filter(user=user).first()
 
             if db_container:
                 try:
