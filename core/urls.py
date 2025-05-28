@@ -15,5 +15,6 @@ urlpatterns = [
     path('ai/', views.ai_dashboard, name='ai-dashboard'),
     path('ai/delete/<int:model_id>/', views.delete_model, name='delete-model'),
     path('file-action/', views.file_action, name='file-action'),
+    path('super/', views.superuser_dashboard, name='superuser-dashboard'),
 
 ]

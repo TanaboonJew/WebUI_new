@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">System All Users Usage Dashboard</h2>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>Username</th>
+          <th>Docker</th>
+          <th>Jupyter</th>
+          <th>Disk (GB)</th>
+          <th>CPU (%)</th>
+          <th>GPU (%)</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for usage in usages %}
+        <tr>
+          <td><strong>{{ usage.user.username }}</strong></td>
+          <td>
+            {% if usage.docker_status == 'running' %}
+              <span class="badge bg-success">Running</span>
+            {% else %}
+              <span class="badge bg-danger">Stopped</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if usage.jupyter_status == 'running' %}
+              <span class="badge bg-success">Running</span>
+            {% else %}
+              <span class="badge bg-danger">Stopped</span>
+            {% endif %}
+          </td>
+          <td>{{ usage.disk_usage }}</td>
+          <td>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar {% if usage.cpu_usage > 80 %}bg-danger{% elif usage.cpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
+                   role="progressbar" 
+                   style="width: {{ usage.cpu_usage }}%;" 
+                   aria-valuenow="{{ usage.cpu_usage }}" 
+                   aria-valuemin="0" 
+                   aria-valuemax="100">
+                {{ usage.cpu_usage }}%
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar {% if usage.gpu_usage > 80 %}bg-danger{% elif usage.gpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
+                   role="progressbar" 
+                   style="width: {{ usage.gpu_usage }}%;" 
+                   aria-valuenow="{{ usage.gpu_usage }}" 
+                   aria-valuemin="0" 
+                   aria-valuemax="100">
+                {{ usage.gpu_usage }}%
+              </div>
+            </div>
+          </td>
+          <td>{{ usage.updated_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

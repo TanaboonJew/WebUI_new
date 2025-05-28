@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponseForbidden
 from .docker_utils import docker_manager
 from .file_utils import ensure_workspace_exists
 from .models import DockerContainer, UserFile, AIModel
@@ -420,3 +420,9 @@ from django.http import HttpResponse
 
 def health_check(request):
     return HttpResponse("OK", status=200)
+
+@login_required
+def superuser_dashboard(request):
+    if not request.user.is_superuser:
+        return redirect('home')
+    return render(request, 'core/superuser_dashboard.html')
