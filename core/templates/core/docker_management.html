@@ -75,15 +75,21 @@
             COPY train_model.py /app/</code></pre>
             </div>
 
-            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <form id="dockerfile-build-form" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="dockerfile">
                 {{ dockerfile_form|crispy }}
-                <button type="submit" class="btn btn-info mt-3 d-flex align-items-center">
+                <button id="build-btn" type="submit" class="btn btn-info mt-3 d-flex align-items-center">
                     <i class="fas fa-cogs me-2"></i>
                     Build Container
                 </button>
             </form>
+            <div id="loading-spinner" class="d-none text-center my-3">
+                <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>กำลัง build container โปรดรอสักครู่...</p>
+            </div>
         </div>
     </div>
 
@@ -106,5 +112,47 @@
         </div>
     </div>
     -->
+    
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('dockerfile-build-form');
+  const spinner = document.getElementById('loading-spinner');
+  const buildBtn = document.getElementById('build-btn');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault(); 
+
+    const formData = new FormData(form);
+    spinner.classList.remove('d-none');  
+    buildBtn.disabled = true;            
+
+    fetch("", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+    })
+    .then(response => response.text())
+    .then(data => {
+        spinner.classList.add('d-none');
+        buildBtn.disabled = false;
+        location.reload();
+    })
+    .catch(error => {
+        spinner.classList.add('d-none');
+        buildBtn.disabled = false;
+        const errorDiv = document.getElementById('error-message');
+        if (errorDiv) {
+            errorDiv.textContent = "เกิดข้อผิดพลาดขณะ build";
+            errorDiv.classList.remove('d-none');
+        }
+    });
+
+  });
+});
+</script>
+
 {% endblock %}
