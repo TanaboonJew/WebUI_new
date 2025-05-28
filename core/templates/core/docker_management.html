@@ -42,6 +42,9 @@
             {% if container.status == 'running' and container.port_bindings.80_tcp %}
                 <p><strong>Access URL:</strong> http://localhost:{{ container.port_bindings.80_tcp }}</p>
             {% endif %}
+            {% if container.image_name %}
+                <p><strong>Image ID:</strong> {{ container.container_id }}</p>
+            {% endif %}
         </div>
     </div>
     {% endif %}
@@ -53,6 +56,25 @@
             <h5 class="mb-0">Build from Dockerfile</h5>
         </div>
         <div class="card-body">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>วิธีเขียน Dockerfile</h5>
+                <p>Dockerfile ของคุณจะถูกจัดเก็บใน:</p>
+                <code>user_data/</code>
+                
+                <p>คุณสามารถใช้เส้นทางสัมพัทธ์ (relative path) เพื่อเข้าถึงไฟล์ของคุณได้:</p>
+                <p>โดยคุณจะต้องอัปโหลด Data ที่ File Manager และ Model ที่ AI model</p>
+                <ul>
+                    <li><code>model/model_name.pt</code> – สำหรับไฟล์โมเดล AI</li>
+                    <li><code>data</code>, <code>folder_data/</code> – สำหรับข้อมูล</li>
+                    <li><code>train_model.py</code> – สำหรับโค้ดที่ต้องการรัน</li>
+                </ul>
+
+                <p>ตัวอย่างใน Dockerfile:</p>
+                <pre><code>COPY model/ /app/model/
+            COPY data1 /app/data1
+            COPY train_model.py /app/</code></pre>
+            </div>
+
             <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="dockerfile">
@@ -65,7 +87,7 @@
         </div>
     </div>
 
-    <!-- Pull Image from DockerHub -->
+    <!-- Pull Image from DockerHub 
     <div class="card mt-4 shadow-sm">
         <div class="card-header bg-secondary text-white d-flex align-items-center">
             <i class="fab fa-docker me-2"></i>
@@ -83,5 +105,6 @@
             </form>
         </div>
     </div>
+    -->
 </div>
 {% endblock %}
