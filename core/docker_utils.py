@@ -202,7 +202,7 @@ class DockerManager:
 
                     port = db_container.jupyter_port
                     token = db_container.jupyter_token
-                    return f"http://localhost:{port}/?token={token}", token
+                    return f"http://{settings.SERVER_IP}:{port}/?token={token}", token
 
                 except docker.errors.NotFound:
                     db_container.delete()
