@@ -261,7 +261,11 @@ def ai_dashboard(request):
                     for chunk in model_file.chunks():
                         dest.write(chunk)
 
-                model = AIModel(user=request.user)
+                model = AIModel(
+                    user=request.user,
+                    name=form.cleaned_data['name'],
+                    framework=form.cleaned_data['framework'],
+                )
                 model.model_file.name = os.path.join(f'user_{request.user.id}_{request.user.username}', model_file.name)
                 model.save()
 
