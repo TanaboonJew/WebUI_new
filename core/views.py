@@ -227,7 +227,7 @@ def ai_dashboard(request):
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
-            container_result = docker_manager.create_container(
+            container_result = docker_manager.start_or_resume_container(
                 request.user,
                 image_name='jupyter/tensorflow-notebook',
                 container_type='jupyter'

@@ -218,3 +218,42 @@ def manage_container(user: CustomUser, action: str, container_type: str = 'defau
 
 def get_container_stats(container_id: str) -> Optional[Dict]:
     return docker_manager.get_container_stats(container_id)
+
+def start_or_resume_container(self, user: CustomUser, image_name: str, container_type: str = 'jupyter') -> Tuple[Optional[str], Optional[str]]:
+    """Start or resume a user's container, preferring reuse"""
+    if not self.client:
+        return None, None
+
+    container_name = f"{container_type}_{user.id}_{user.username}"
+
+    try:
+        # Check DB record
+        db_container = DockerContainer.objects.filter(user=user, container_type=container_type).first()
+
+        if db_container:
+            try:
+                container = self.client.containers.get(container_name)
+
+                if container.status != 'running':
+                    container.start()
+                    db_container.status = 'running'
+                    db_container.save()
+                    logger.info(f"Resumed container {container_name}")
+                else:
+                    logger.info(f"Container {container_name} is already running")
+
+                port = db_container.jupyter_port
+                token = db_container.jupyter_token
+                return f"http://localhost:{port}/?token={token}", token
+
+            except docker.errors.NotFound:
+                # If container doesn't exist anymore, delete stale DB record
+                db_container.delete()
+                logger.warning(f"Stale DB container {container_name} deleted; recreating.")
+
+        # Otherwise, create a new one
+        return self.create_container(user, image_name, container_type)
+
+    except Exception as e:
+        logger.error(f"start_or_resume_container failed: {e}")
+        return None, None
