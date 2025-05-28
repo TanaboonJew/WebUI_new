@@ -103,6 +103,12 @@ class AIModel(models.Model):
         return f"{self.name} ({self.get_framework_display()})"
 
     def delete(self, *args, **kwargs):
-        """Delete the associated model file when model is deleted"""
-        self.model_file.delete(save=False)
+        file_path = self.model_file.path
+
+        is_file_shared = AIModel.objects.filter(model_file=self.model_file.name).exclude(id=self.id).exists()
+
+        if not is_file_shared:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
         super().delete(*args, **kwargs)

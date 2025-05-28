@@ -254,23 +254,36 @@ def ai_dashboard(request):
             form = AIModelForm(request.POST, request.FILES)
             if form.is_valid():
                 model_file = form.cleaned_data['model_file']
-                workspace = ensure_workspace_exists(request.user)
-                save_path = os.path.join(workspace, model_file.name)
+                name = form.cleaned_data['name'].strip()
+                framework = form.cleaned_data['framework']
 
-                with open(save_path, 'wb+') as dest:
-                    for chunk in model_file.chunks():
-                        dest.write(chunk)
+                if not name:
+                    name = os.path.splitext(model_file.name)[0]
 
-                model = AIModel(
-                    user=request.user,
-                    name=form.cleaned_data['name'],
-                    framework=form.cleaned_data['framework'],
-                )
-                model.model_file.name = os.path.join(f'user_{request.user.id}_{request.user.username}', model_file.name)
-                model.save()
+                if AIModel.objects.filter(user=request.user, name=name).exists():
+                    form.add_error('name', 'You already have a model with this name.')
+                else:
+                    workspace = ensure_workspace_exists(request.user)
+                    save_path = os.path.join(workspace, model_file.name)
 
-                messages.success(request, "Model uploaded successfully")
-                return redirect('ai-dashboard')
+                    with open(save_path, 'wb+') as dest:
+                        for chunk in model_file.chunks():
+                            dest.write(chunk)
+
+                    model = AIModel(
+                        user=request.user,
+                        name=name,
+                        framework=framework,
+                    )
+                    model.model_file.name = os.path.join(
+                        f'user_{request.user.id}_{request.user.username}',
+                        model_file.name
+                    )
+                    model.save()
+
+                    messages.success(request, "Model uploaded successfully")
+                    return redirect('ai-dashboard')
+
 
     return render(request, 'core/ai_dashboard.html', {
         'models': models,

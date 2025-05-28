@@ -76,6 +76,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Framework</th>
+                            <th>Filename</th>
                             <th>Size</th>
                             <th>Uploaded</th>
                             <th>Actions</th>
@@ -86,6 +87,7 @@
                         <tr>
                             <td>{{ model.name }}</td>
                             <td><span class="badge bg-primary">{{ model.get_framework_display }}</span></td>
+                            <td>{{ model.filename }}</td>
                             <td>{{ model.model_file.size|filesizeformat }}</td>
                             <td>{{ model.created_at|date:"Y-m-d H:i" }}</td>
                             <td>
@@ -99,7 +101,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center">No models uploaded yet</td>
+                            <td colspan="6" class="text-center">No models uploaded yet</td>
                         </tr>
                         {% endfor %}
                     </tbody>

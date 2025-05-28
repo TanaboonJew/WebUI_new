@@ -74,10 +74,6 @@
                     <td>{{ file.uploaded_at }}</td>
                     <td>
                         <a href="{% url 'download-file' file.id %}" class="btn btn-sm btn-success"><i class="fas fa-download"></i></a>
-                        <button class="btn btn-sm btn-warning" onclick="fileAction('{{ file.id }}', 'rename')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-info" onclick="fileAction('{{ file.id }}', 'copy')"><i class="fas fa-copy"></i></button>
-                        <button class="btn btn-sm btn-secondary" onclick="fileAction('{{ file.id }}', 'cut')"><i class="fas fa-cut"></i></button>
-                        <button class="btn btn-sm btn-dark" onclick="fileAction('{{ file.id }}', 'paste')"><i class="fas fa-paste"></i></button>
                         <a href="{% url 'delete-file' file.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ file.filename }}?')"><i class="fas fa-trash-alt"></i></a>
                     </td>
                 </tr>
