@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from .docker_utils import docker_manager
 from .file_utils import ensure_workspace_exists
-from .models import DockerContainer, UserFile, AIModel
+from .models import DockerContainer, UserFile, AIModel, CustomUser
 from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm, DockerImageForm
 from .monitoring import get_system_stats, get_user_container_stats
 from django.contrib import messages
@@ -426,3 +426,36 @@ def superuser_dashboard(request):
     if not request.user.is_superuser:
         return redirect('home')
     return render(request, 'core/superuser_dashboard.html')
+
+@login_required
+def approve_users(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        action = request.POST.get('action')
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            if action == 'approve':
+                user.role = user.intended_role
+                user.role_verified = True
+                user.intended_role = None
+            elif action == 'deny':
+                user.role = 'bachelor'
+                user.role_verified = False
+                user.intended_role = None
+            user.save()
+        except CustomUser.DoesNotExist:
+            pass
+        return redirect('approve_users')  # name of this view
+
+    pending_users = CustomUser.objects.filter(intended_role__isnull=False)
+    return render(request, 'core/approve_users.html', {'pending_users': pending_users})
+
+@login_required
+def request_role_verification(request):
+    if request.method == 'POST':
+        role = request.POST.get('intended_role')
+        user = request.user
+        user.intended_role = role
+        user.role_verified = False  # not verified until approved again
+        user.save()
+    return redirect('home')

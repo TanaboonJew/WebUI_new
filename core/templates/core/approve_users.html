@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">Pending Role Approval</h2>
+  <table class="table table-bordered text-center">
+    <thead class="table-dark">
+      <tr>
+        <th>Username</th>
+        <th>Requested Role</th>
+        <th>Current Role</th>
+        <th>Verified?</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in pending_users %}
+      <tr>
+        <td>{{ user.username }}</td>
+        <td>{{ user.get_intended_role_display }}</td>
+        <td>{{ user.get_role_display }}</td>
+        <td>
+          {% if user.role_verified %}
+            <span class="badge bg-success">Yes</span>
+          {% else %}
+            <span class="badge bg-warning">No</span>
+          {% endif %}
+        </td>
+        <td>
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <button name="action" value="approve" class="btn btn-success btn-sm">Approve</button>
+            <button name="action" value="deny" class="btn btn-danger btn-sm">Deny</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

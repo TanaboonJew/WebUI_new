@@ -3,9 +3,15 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import CustomUser
 
 class CustomUserCreationForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
+    intended_role = forms.ChoiceField(
+        choices=CustomUser.ROLE_CHOICES,
+        label="เลือกบทบาทที่คุณต้องการ",
+        help_text="ระบบจะตั้งค่าบทบาทเป็น 'ปริญญาตรี' โดยอัตโนมัติ จนกว่าแอดมินจะอนุมัติ"
+    )
+
+    class Meta:
         model = CustomUser
-        fields = ('username', 'email')
+        fields = ['username', 'email', 'password1', 'password2', 'intended_role']
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta:

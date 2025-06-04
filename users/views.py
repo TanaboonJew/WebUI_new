@@ -7,7 +7,11 @@ def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            user.role = 'bachelor'
+            user.role_verified = False 
+            user.save()
+
             login(request, user)
             return redirect('home')
     else:
