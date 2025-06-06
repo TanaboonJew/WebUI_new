@@ -102,53 +102,74 @@ class DockerManager:
                     runtime='nvidia' if user.gpu_access else None
                 )
 
-                DockerContainer.objects.create(
+                DockerContainer.objects.update_or_create(
                     user=user,
-                    container_id=container.id,
-                    image_name="jupyter/tensorflow-notebook",
-                    status='running',
-                    jupyter_token=token,
-                    jupyter_port=port,
-                    resource_limits={
-                        'cpu': user.cpu_limit,
-                        'ram': user.ram_limit,
-                        'gpu': user.gpu_access
+                    defaults={
+                        'container_id': container.id,
+                        'image_name': "jupyter/tensorflow-notebook",
+                        'status': 'running',
+                        'jupyter_token': token,
+                        'jupyter_port': port,
+                        'resource_limits': {
+                            'cpu': user.cpu_limit,
+                            'ram': user.ram_limit,
+                            'gpu': user.gpu_access
+                        }
                     }
                 )
 
-                return f"http://localhost:{port}/?token={token}", token
+                return f"http://{settings.SERVER_IP}:{port}/?token={token}", token
+            else:
+                # Handle other types if needed
+                pass
 
         except Exception as e:
             logger.error(f"Container creation failed: {e}")
             return None, None
 
+
     def manage_container(self, user: CustomUser, action: str, container_type: str = 'default') -> bool:
         if not self.client:
             return False
+        container_name = f"{container_type}_{user.id}_{user.username}"
         try:
-            container_name = f"{container_type}_{user.id}_{user.username}"
             container = self.client.containers.get(container_name)
+            db_container = DockerContainer.objects.filter(user=user, container_id=container.id).first()
 
             if action == 'start':
                 container.start()
-                status = 'running'
+                if db_container:
+                    db_container.status = 'running'
+                    db_container.save()
+                logger.info(f"Started container {container_name}")
+
             elif action == 'stop':
                 container.stop()
-                status = 'stopped'
+                if db_container:
+                    db_container.status = 'stopped'
+                    db_container.save()
+                logger.info(f"Stopped container {container_name}")
+
             elif action == 'delete':
                 container.remove(force=True)
-                DockerContainer.objects.filter(user=user, container_id=container.id).delete()
-                return True
-            else:
-                raise ValueError("Invalid action")
+                if db_container:
+                    db_container.delete()
+                logger.info(f"Deleted container {container_name}")
 
-            if container_type != 'jupyter':
-                DockerContainer.objects.filter(user=user, container_id=container.id).update(status=status)
+            else:
+                logger.warning(f"Invalid action: {action}")
+                return False
 
             return True
+
+        except docker.errors.NotFound:
+            logger.warning(f"Container {container_name} not found.")
+            DockerContainer.objects.filter(user=user).delete()
+            return False
         except Exception as e:
             logger.error(f"Container {action} failed: {e}")
             return False
+
 
     def get_container_stats(self, container_id: str) -> Optional[Dict]:
         if not self.client:
@@ -205,8 +226,8 @@ class DockerManager:
                     return f"http://{settings.SERVER_IP}:{port}/?token={token}", token
 
                 except docker.errors.NotFound:
-                    db_container.delete()
                     logger.warning(f"Stale DB container {container_name} deleted; recreating.")
+                    db_container.delete()
 
             return self.create_container(user, image_name, container_type)
 

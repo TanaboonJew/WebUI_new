@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404, HttpResponseForbidden
-from .docker_utils import docker_manager
+from .docker_utils import docker_manager, manage_container
 from .file_utils import ensure_workspace_exists
 from .models import DockerContainer, UserFile, AIModel, CustomUser
 from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm, DockerImageForm
@@ -29,19 +29,25 @@ def docker_management(request):
             dockerfile_form = DockerfileUploadForm(request.POST, request.FILES)
             if dockerfile_form.is_valid():
                 dockerfile = dockerfile_form.cleaned_data['dockerfile']
-                workspace = ensure_workspace_exists(request.user)
-                dockerfile_path = os.path.join(workspace, dockerfile.name)
+                
+                # สร้างหรืออัพเดต DockerContainer object
+                container, created = DockerContainer.objects.get_or_create(user=request.user)
+                container.dockerfile.save(dockerfile.name, dockerfile)
+                container.status = 'building'
+                container.save()
 
-                with open(dockerfile_path, 'wb+') as dest:
-                    for chunk in dockerfile.chunks():
-                        dest.write(chunk)
-
+                # build image จาก dockerfile.path
+                dockerfile_path = container.dockerfile.path
                 image_id, logs = docker_manager.build_from_dockerfile(
                     request.user,
                     dockerfile_path
                 )
-
+                
+                container.build_logs = logs
                 if image_id:
+                    container.image_name = image_id
+                    container.status = 'running'
+                    container.save()
                     container_url = docker_manager.create_container(
                         request.user,
                         image_name=image_id,
@@ -51,8 +57,12 @@ def docker_management(request):
                         messages.success(request, "Container built and started successfully!")
                         return redirect('docker-management')
                     else:
+                        container.status = 'error'
+                        container.save()
                         messages.error(request, "Failed to start container")
                 else:
+                    container.status = 'error'
+                    container.save()
                     messages.error(request, f"Build failed: {logs}")
 
         elif form_type == 'image':
@@ -119,31 +129,33 @@ def file_manager(request):
 
 @login_required
 def start_container_view(request):
-    if request.method == 'POST':
-        if docker_manager.manage_container(request.user, 'start'):
-            messages.success(request, "Container started successfully")
-        else:
-            messages.error(request, "Failed to start container")
+    user = request.user
+    success = docker_manager.manage_container(user, action='start', container_type='jupyter')
+    if success:
+        messages.success(request, "Container started successfully.")
+    else:
+        messages.error(request, "Failed to start container.")
     return redirect('docker-management')
 
 
 @login_required
 def stop_container_view(request):
-    if request.method == 'POST':
-        if docker_manager.manage_container(request.user, 'stop'):
-            messages.success(request, "Container stopped successfully")
-        else:
-            messages.error(request, "Failed to stop container")
+    user = request.user
+    success = manage_container(user, action='stop', container_type='jupyter') 
+    if success:
+        messages.success(request, "Container stopped successfully.")
+    else:
+        messages.warning(request, "Could not stop container.")
     return redirect('docker-management')
-
 
 @login_required
 def delete_container_view(request):
     if request.method == 'POST':
-        if docker_manager.manage_container(request.user, 'delete'):
-            messages.success(request, "Container deleted successfully")
+        success = docker_manager.manage_container(request.user, action='delete', container_type='jupyter')
+        if success:
+            messages.success(request, "Container deleted successfully.")
         else:
-            messages.error(request, "Failed to delete container")
+            messages.error(request, "Failed to delete container.")
     return redirect('docker-management')
 
 
