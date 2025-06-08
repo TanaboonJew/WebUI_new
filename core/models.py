@@ -9,8 +9,10 @@ def user_directory_path(instance, filename):
 
 
 def user_file_path(instance, filename):
-    """Used by models that have a static file_type attribute"""
-    return f"user_{instance.user.id}_({instance.user.username})/{instance.file_type}/{filename}"
+    return f"user_{instance.user.id}_{instance.user.username}/user_data/{filename}"
+
+def user_model_path(instance, filename):
+    return f"user_{instance.user.id}_{instance.user.username}/user_model/{filename}"
 
 
 class DockerContainer(models.Model):
@@ -53,7 +55,7 @@ class DockerContainer(models.Model):
 
 class UserFile(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='user_files')
-    file = models.FileField(upload_to=user_directory_path)
+    file = models.FileField(upload_to=user_file_path)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -63,10 +65,9 @@ class UserFile(models.Model):
 
     def filename(self):
         parts = self.file.name.split('/')
-        user_folder_prefix = f"user_{self.user.id}_({self.user.username})"
-        if len(parts) > 2 and parts[0] == user_folder_prefix and parts[1] == 'userfiles':
-            return '/'.join(parts[2:])
-        else:
+        try:
+            return parts[-1] 
+        except IndexError:
             return self.file.name
 
     def __str__(self):
@@ -89,7 +90,7 @@ class AIModel(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='ai_models')
     name = models.CharField(max_length=100)
     framework = models.CharField(max_length=20, choices=FRAMEWORKS)
-    model_file = models.FileField(upload_to=user_file_path)
+    model_file = models.FileField(upload_to=user_model_path)
     created_at = models.DateTimeField(auto_now_add=True)
     file_type = 'models'  # Used in upload path
 

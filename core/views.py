@@ -97,29 +97,13 @@ def file_manager(request):
 
     if request.method == 'POST':
         uploaded_files = request.FILES.getlist('files')
-        folder_name = request.POST.get('folder_name', '').strip()
-
-        workspace = ensure_workspace_exists(request.user)
 
         for uploaded_file in uploaded_files:
-            if folder_name:
-                save_path = os.path.join(workspace, folder_name, uploaded_file.name)
-                relative_path = os.path.join(folder_name, uploaded_file.name)
-            else:
-                save_path = os.path.join(workspace, uploaded_file.name)
-                relative_path = uploaded_file.name
-
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-            with open(save_path, 'wb+') as dest:
-                for chunk in uploaded_file.chunks():
-                    dest.write(chunk)
-
             user_file = UserFile(user=request.user)
-            user_file.file.name = os.path.join(f'user_{request.user.id}_{request.user.username}', relative_path)
+            user_file.file.save(uploaded_file.name, uploaded_file)
             user_file.save()
 
-        messages.success(request, "Files/folders uploaded successfully")
+        messages.success(request, "Files uploaded successfully")
         return redirect('file-manager')
 
     return render(request, 'core/file_manager.html', {
@@ -275,27 +259,16 @@ def ai_dashboard(request):
                 if AIModel.objects.filter(user=request.user, name=name).exists():
                     form.add_error('name', 'You already have a model with this name.')
                 else:
-                    workspace = ensure_workspace_exists(request.user)
-                    save_path = os.path.join(workspace, model_file.name)
-
-                    with open(save_path, 'wb+') as dest:
-                        for chunk in model_file.chunks():
-                            dest.write(chunk)
-
                     model = AIModel(
                         user=request.user,
                         name=name,
                         framework=framework,
                     )
-                    model.model_file.name = os.path.join(
-                        f'user_{request.user.id}_{request.user.username}',
-                        model_file.name
-                    )
+                    model.model_file.save(model_file.name, model_file)
                     model.save()
 
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
-
 
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
