@@ -1,14 +1,16 @@
 import docker
 from docker.errors import DockerException
 import os
-import logging
 import random
-import string
+import shutil
 import socket
-from typing import Optional, Dict, Union, Tuple
+import string
+import docker
+from docker.errors import DockerException
+from typing import Dict, Optional, Tuple
 from django.conf import settings
-from .models import DockerContainer
-from users.models import CustomUser
+from .models import DockerContainer, CustomUser  # ปรับตามโปรเจกต์คุณ
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,31 @@ class DockerManager:
             os.makedirs(d, exist_ok=True)
         return dirs
 
+    def _copy_user_uploaded_files(self, user: CustomUser, dirs: Dict[str, str]):
+        base_user_path = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}_{user.username}')
+        src_data_dir = os.path.join(base_user_path, 'user_data')
+        src_model_dir = os.path.join(base_user_path, 'user_model')
+
+        # Copy user_data -> data/
+        if os.path.exists(src_data_dir):
+            for root, _, files in os.walk(src_data_dir):
+                for file in files:
+                    src_file = os.path.join(root, file)
+                    rel_path = os.path.relpath(src_file, src_data_dir)
+                    dst_file = os.path.join(dirs['data'], rel_path)
+                    os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+                    shutil.copy2(src_file, dst_file)
+
+        # Copy user_model -> models/
+        if os.path.exists(src_model_dir):
+            for root, _, files in os.walk(src_model_dir):
+                for file in files:
+                    src_file = os.path.join(root, file)
+                    rel_path = os.path.relpath(src_file, src_model_dir)
+                    dst_file = os.path.join(dirs['models'], rel_path)
+                    os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+                    shutil.copy2(src_file, dst_file)
+
     def build_from_dockerfile(self, user: CustomUser, dockerfile_path: str) -> Tuple[Optional[str], Optional[str]]:
         if not self.client:
             return None, "Docker not available"
@@ -72,11 +99,20 @@ class DockerManager:
             logger.error(f"Build failed: {str(e)}")
             return None, str(e)
 
+    def _clear_user_mount_dirs(self, dirs: Dict[str, str]):
+    for path in [dirs['data'], dirs['models']]:
+        if os.path.exists(path):
+            shutil.rmtree(path)
+            os.makedirs(path, exist_ok=True)
+
     def create_container(self, user: CustomUser, image_name: str, container_type: str = 'default') -> Tuple[Optional[str], Optional[str]]:
         if not self.client:
             return None, None
         try:
             dirs = self._prepare_user_directories(user)
+            self._clear_user_mount_dirs(dirs)
+            self._copy_user_uploaded_files(user, dirs)
+
             container_name = f"{container_type}_{user.id}_{user.username}"
 
             if container_type == 'jupyter':
@@ -119,14 +155,13 @@ class DockerManager:
                 )
 
                 return f"http://{settings.SERVER_IP}:{port}/?token={token}", token
+
             else:
-                # Handle other types if needed
-                pass
+                pass  # สำหรับ container ประเภทอื่น
 
         except Exception as e:
             logger.error(f"Container creation failed: {e}")
             return None, None
-
 
     def manage_container(self, user: CustomUser, action: str, container_type: str = 'default') -> bool:
         if not self.client:
@@ -169,7 +204,6 @@ class DockerManager:
         except Exception as e:
             logger.error(f"Container {action} failed: {e}")
             return False
-
 
     def get_container_stats(self, container_id: str) -> Optional[Dict]:
         if not self.client:
