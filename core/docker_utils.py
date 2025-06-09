@@ -100,10 +100,10 @@ class DockerManager:
             return None, str(e)
 
     def _clear_user_mount_dirs(self, dirs: Dict[str, str]):
-    for path in [dirs['data'], dirs['models']]:
-        if os.path.exists(path):
-            shutil.rmtree(path)
-            os.makedirs(path, exist_ok=True)
+        for path in [dirs['data'], dirs['models']]:
+            if os.path.exists(path):
+                shutil.rmtree(path)
+                os.makedirs(path, exist_ok=True)
 
     def create_container(self, user: CustomUser, image_name: str, container_type: str = 'default') -> Tuple[Optional[str], Optional[str]]:
         if not self.client:
