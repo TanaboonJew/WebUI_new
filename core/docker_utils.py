@@ -120,7 +120,7 @@ class DockerManager:
                 token = self._generate_jupyter_token()
 
                 container = self.client.containers.run(
-                    image="jupyter/tensorflow-notebook:latest",
+                    image=f"{image_name}:latest",
                     name=container_name,
                     volumes={
                         dirs['jupyter']: {'bind': '/home/jovyan/work', 'mode': 'rw'},
@@ -142,7 +142,7 @@ class DockerManager:
                     user=user,
                     defaults={
                         'container_id': container.id,
-                        'image_name': "jupyter/tensorflow-notebook",
+                        'image_name': f"{image_name}:latest",
                         'status': 'running',
                         'jupyter_token': token,
                         'jupyter_port': port,

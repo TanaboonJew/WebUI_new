@@ -33,6 +33,14 @@
                     {% else %}
                     <form method="post">
                         {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="model_id" class="form-label">Select Model</label>
+                            <select name="model_id" id="model_id" class="form-control" required>
+                                {% for model in models %}
+                                    <option value="{{ model.id }}">{{ model.name }} ({{ model.framework }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                         <button type="submit" name="start_jupyter" class="btn btn-primary">
                             <i class="fas fa-play"></i> Launch Notebook
                         </button>

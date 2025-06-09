@@ -1,7 +1,7 @@
 import os
 from django.db import models
 from users.models import CustomUser
-
+from os.path import basename
 
 def user_directory_path(instance, filename):
     """Returns: user_<ID>_(<USERNAME>)/<type>/<filename>"""
@@ -14,6 +14,8 @@ def user_file_path(instance, filename):
 def user_model_path(instance, filename):
     return f"user_{instance.user.id}_{instance.user.username}/user_model/{filename}"
 
+def user_dockerfile_path(instance, filename):
+    return f"user_{instance.user.id}_{instance.user.username}/{filename}"
 
 class DockerContainer(models.Model):
     STATUS_CHOICES = [
@@ -27,7 +29,7 @@ class DockerContainer(models.Model):
     container_id = models.CharField(max_length=64, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='building')
     dockerfile = models.FileField(
-        upload_to='dockerfiles/',
+        upload_to=user_dockerfile_path,
         null=False, ### change this to true when migrate
         blank=False # this too
     )
@@ -93,6 +95,10 @@ class AIModel(models.Model):
     model_file = models.FileField(upload_to=user_model_path)
     created_at = models.DateTimeField(auto_now_add=True)
     file_type = 'models'  # Used in upload path
+    
+    @property
+    def filename(self):
+        return basename(self.model_file.name)
 
     class Meta:
         ordering = ['-created_at']

@@ -217,28 +217,56 @@ def private_dashboard(request):
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
     jupyter_token = None
-    jupyter_running = False
     jupyter_url = None
     form = AIModelForm()
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
-            container_result = docker_manager.start_or_resume_container(
-                request.user,
-                image_name='jupyter/tensorflow-notebook',
-                container_type='jupyter'
-            )
+            model_id = request.POST.get('model_id')
+            if not model_id:
+                messages.error(request, "No model selected.")
+                return redirect('ai-dashboard')
 
-            if container_result:
-                if isinstance(container_result, tuple) and len(container_result) == 2:
-                    jupyter_url, jupyter_token = container_result
+            try:
+                model = AIModel.objects.get(id=model_id, user=request.user)
+                framework = model.framework.lower().strip()
+
+                image_map = {
+                    'tensorflow': 'jupyter/tensorflow-notebook', 
+                    'keras': 'jupyter/tensorflow-notebook',
+                    'pytorch': 'jupyter/datascience-notebook',    
+                    'onnx': 'jupyter/scipy-notebook'             
+                }
+
+                print(f"Selected Model: {model.name}")
+                print(f"Framework: {framework}")
+
+                if framework not in image_map:
+                    messages.error(request, f"Unsupported framework: {framework}")
+                    return redirect('ai-dashboard')
+
+                image_name = image_map[framework]
+
+                container_result = docker_manager.start_or_resume_container(
+                    request.user,
+                    image_name=image_name,
+                    container_type='jupyter'
+                )
+
+                if container_result:
+                    if isinstance(container_result, tuple) and len(container_result) == 2:
+                        jupyter_url, jupyter_token = container_result
+                    else:
+                        jupyter_url = container_result
+                        jupyter_token = None
+
+                    messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")
                 else:
-                    jupyter_url = container_result
-                    jupyter_token = None
+                    messages.error(request, "Failed to start Jupyter Notebook")
 
-                messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")
-            else:
-                messages.error(request, "Failed to start Jupyter Notebook")
+            except AIModel.DoesNotExist:
+                messages.error(request, "Model not found.")
+                return redirect('ai-dashboard')
 
         elif 'stop_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'stop', container_type='jupyter'):
@@ -251,7 +279,7 @@ def ai_dashboard(request):
             if form.is_valid():
                 model_file = form.cleaned_data['model_file']
                 name = form.cleaned_data['name'].strip()
-                framework = form.cleaned_data['framework']
+                framework = form.cleaned_data['framework'].strip().lower()
 
                 if not name:
                     name = os.path.splitext(model_file.name)[0]
@@ -270,6 +298,7 @@ def ai_dashboard(request):
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
 
+    
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'form': form,
