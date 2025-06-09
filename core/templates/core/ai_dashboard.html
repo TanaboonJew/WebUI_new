@@ -36,6 +36,7 @@
                         <div class="mb-3">
                             <label for="model_id" class="form-label">Select Model</label>
                             <select name="model_id" id="model_id" class="form-control" required>
+                                <option value="">-- Optional --</option>
                                 {% for model in models %}
                                     <option value="{{ model.id }}">{{ model.name }} ({{ model.framework }})</option>
                                 {% endfor %}
