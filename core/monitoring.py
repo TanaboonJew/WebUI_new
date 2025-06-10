@@ -64,24 +64,23 @@ def get_gpu_stats():
     return None
 
 def get_user_container_stats(container_id):
-    container = DockerContainer.objects.get(container_id=container_id)
     """Get stats for a user's Docker container"""
     if not docker_client:
         return None
-    
+
     try:
-        container = DockerContainer.objects.get(user=user)
-        docker_container = docker_client.containers.get(container.container_id)
-        
+        container = DockerContainer.objects.get(container_id=container_id)
+        docker_container = docker_client.containers.get(container_id)
+
         stats = docker_container.stats(stream=False)
         cpu_stats = stats['cpu_stats']
         precpu_stats = stats['precpu_stats']
-        
-        # Calculate CPU percentage
+
+        # คำนวณ CPU usage
         cpu_delta = cpu_stats['cpu_usage']['total_usage'] - precpu_stats['cpu_usage']['total_usage']
         system_delta = cpu_stats['system_cpu_usage'] - precpu_stats['system_cpu_usage']
         cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
-        
+
         return {
             'cpu_percent': round(cpu_percent, 2),
             'memory_usage': stats['memory_stats'].get('usage', 0),
@@ -89,5 +88,6 @@ def get_user_container_stats(container_id):
             'network': stats.get('networks', {}),
             'status': container.status
         }
+
     except (DockerContainer.DoesNotExist, docker.errors.NotFound):
         return None
