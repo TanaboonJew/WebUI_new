@@ -235,7 +235,7 @@ def ai_dashboard(request):
                 framework = model.framework.lower().strip()
 
                 image_map = {
-                    'tensorflow': 'jupyter/tensorflow-notebook', 
+                    'tensorflow': 'my-jupyter-tf',
                     'keras': 'jupyter/tensorflow-notebook',
                     'pytorch': 'jupyter/datascience-notebook',    
                     'onnx': 'jupyter/scipy-notebook'             
