@@ -76,10 +76,15 @@ def get_user_container_stats(container_id):
         cpu_stats = stats['cpu_stats']
         precpu_stats = stats['precpu_stats']
 
-        # คำนวณ CPU usage
-        cpu_delta = cpu_stats['cpu_usage']['total_usage'] - precpu_stats['cpu_usage']['total_usage']
-        system_delta = cpu_stats['system_cpu_usage'] - precpu_stats['system_cpu_usage']
-        cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
+        system_cpu_current = cpu_stats.get('system_cpu_usage')
+        system_cpu_previous = precpu_stats.get('system_cpu_usage')
+
+        if system_cpu_current is None or system_cpu_previous is None:
+            cpu_percent = 0
+        else:
+            cpu_delta = cpu_stats['cpu_usage']['total_usage'] - precpu_stats['cpu_usage']['total_usage']
+            system_delta = system_cpu_current - system_cpu_previous
+            cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
 
         return {
             'cpu_percent': round(cpu_percent, 2),
@@ -91,3 +96,4 @@ def get_user_container_stats(container_id):
 
     except (DockerContainer.DoesNotExist, docker.errors.NotFound):
         return None
+
