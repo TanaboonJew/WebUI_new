@@ -448,14 +448,18 @@ def superuser_dashboard(request):
     usages = []
 
     for user in users:
-        try:
-            container = DockerContainer.objects.get(user=user)
+        if not isinstance(user, CustomUser):  # ป้องกัน type error
+            continue
+
+        container = DockerContainer.objects.filter(user=user).first()
+
+        if container:
             stats = get_user_container_stats(container.container_id)
             docker_status = container.status
             jupyter_status = 'running' if container.status == 'running' else 'stopped'
             cpu_usage = stats.get('cpu_percent', 0)
             gpu_usage = stats.get('gpu_percent', 0)
-        except DockerContainer.DoesNotExist:
+        else:
             docker_status = 'stopped'
             jupyter_status = 'stopped'
             cpu_usage = 0
@@ -465,7 +469,7 @@ def superuser_dashboard(request):
             'user': user,
             'docker_status': docker_status,
             'jupyter_status': jupyter_status,
-            'disk_usage': 10,  # ตัวอย่าง จำลองไว้ก่อน
+            'disk_usage': 10,  # จำลองไว้ก่อน
             'cpu_usage': cpu_usage,
             'gpu_usage': gpu_usage,
             'updated_at': timezone.now()
@@ -483,14 +487,18 @@ def api_usage_data(request):
     usage_list = []
 
     for user in users:
-        try:
-            container = DockerContainer.objects.get(user=user)
+        if not isinstance(user, CustomUser):
+            continue
+
+        container = DockerContainer.objects.filter(user=user).first()
+
+        if container:
             stats = get_user_container_stats(container.container_id)
             docker_status = container.status
             jupyter_status = 'running' if container.status == 'running' else 'stopped'
             cpu_usage = stats.get('cpu_percent', 0)
             gpu_usage = stats.get('gpu_percent', 0)
-        except DockerContainer.DoesNotExist:
+        else:
             docker_status = 'stopped'
             jupyter_status = 'stopped'
             cpu_usage = 0
@@ -500,7 +508,7 @@ def api_usage_data(request):
             'username': user.username,
             'docker_status': docker_status,
             'jupyter_status': jupyter_status,
-            'disk_usage': 10,  # mock value
+            'disk_usage': 10,
             'cpu_usage': cpu_usage,
             'gpu_usage': gpu_usage,
             'updated_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S')
