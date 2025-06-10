@@ -63,7 +63,8 @@ def get_gpu_stats():
         pass
     return None
 
-def get_user_container_stats(user):
+def get_user_container_stats(container_id):
+    container = DockerContainer.objects.get(container_id=container_id)
     """Get stats for a user's Docker container"""
     if not docker_client:
         return None
