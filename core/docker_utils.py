@@ -11,6 +11,7 @@ from typing import Dict, Optional, Tuple
 from django.conf import settings
 from .models import DockerContainer, CustomUser  # ปรับตามโปรเจกต์คุณ
 import logging
+from docker.types import DeviceRequest
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +136,9 @@ class DockerManager:
                     detach=True,
                     mem_limit=f"{user.ram_limit}m",
                     cpu_shares=int(user.cpu_limit * 1024),
-                    runtime='nvidia' if user.gpu_access else None
+                    device_requests=[
+                        DeviceRequest(count=-1, capabilities=[['gpu']])
+                    ] if user.gpu_access else None
                 )
 
                 DockerContainer.objects.update_or_create(
