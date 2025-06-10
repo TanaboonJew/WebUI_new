@@ -120,6 +120,8 @@ class DockerManager:
                 port = self._get_available_port()
                 token = self._generate_jupyter_token()
 
+                device_requests = [DeviceRequest(count=-1, capabilities=[['gpu']])] if user.gpu_access else None
+
                 container = self.client.containers.run(
                     image=f"{image_name}:latest",
                     name=container_name,
@@ -136,9 +138,7 @@ class DockerManager:
                     detach=True,
                     mem_limit=f"{user.ram_limit}m",
                     cpu_shares=int(user.cpu_limit * 1024),
-                    device_requests=[
-                        DeviceRequest(count=-1, capabilities=[['gpu']])
-                    ] if user.gpu_access else None
+                    device_requests=device_requests
                 )
 
                 DockerContainer.objects.update_or_create(
