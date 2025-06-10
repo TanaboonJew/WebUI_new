@@ -2,6 +2,7 @@
 {% block content %}
 <div class="container mt-4">
   <h2 class="mb-4 text-center">System All Users Usage Dashboard</h2>
+
   <div class="table-responsive">
     <table class="table table-bordered table-hover align-middle text-center">
       <thead class="table-dark">
@@ -15,7 +16,8 @@
           <th>Last Updated</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="usage-table-body">
+        <!-- initial data filled by server -->
         {% for usage in usages %}
         <tr>
           <td><strong>{{ usage.user.username }}</strong></td>
@@ -36,24 +38,18 @@
           <td>{{ usage.disk_usage }}</td>
           <td>
             <div class="progress" style="height: 20px;">
-              <div class="progress-bar {% if usage.cpu_usage > 80 %}bg-danger{% elif usage.cpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
-                   role="progressbar" 
-                   style="width: {{ usage.cpu_usage }}%;" 
-                   aria-valuenow="{{ usage.cpu_usage }}" 
-                   aria-valuemin="0" 
-                   aria-valuemax="100">
+              <div class="progress-bar {% if usage.cpu_usage > 80 %}bg-danger{% elif usage.cpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}"
+                   role="progressbar"
+                   style="width: {{ usage.cpu_usage }}%;">
                 {{ usage.cpu_usage }}%
               </div>
             </div>
           </td>
           <td>
             <div class="progress" style="height: 20px;">
-              <div class="progress-bar {% if usage.gpu_usage > 80 %}bg-danger{% elif usage.gpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
-                   role="progressbar" 
-                   style="width: {{ usage.gpu_usage }}%;" 
-                   aria-valuenow="{{ usage.gpu_usage }}" 
-                   aria-valuemin="0" 
-                   aria-valuemax="100">
+              <div class="progress-bar {% if usage.gpu_usage > 80 %}bg-danger{% elif usage.gpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}"
+                   role="progressbar"
+                   style="width: {{ usage.gpu_usage }}%;">
                 {{ usage.gpu_usage }}%
               </div>
             </div>
@@ -65,4 +61,46 @@
     </table>
   </div>
 </div>
+
+<script>
+function loadUsageData() {
+  fetch("{% url 'api_usage_data' %}")
+    .then(response => response.json())
+    .then(data => {
+      const tbody = document.getElementById("usage-table-body");
+      tbody.innerHTML = "";
+
+      data.usages.forEach(usage => {
+        tbody.innerHTML += `
+        <tr>
+          <td><strong>${usage.username}</strong></td>
+          <td><span class="badge ${usage.docker_status === 'running' ? 'bg-success' : 'bg-danger'}">${usage.docker_status}</span></td>
+          <td><span class="badge ${usage.jupyter_status === 'running' ? 'bg-success' : 'bg-danger'}">${usage.jupyter_status}</span></td>
+          <td>${usage.disk_usage}</td>
+          <td>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar ${getColorClass(usage.cpu_usage)}" style="width: ${usage.cpu_usage}%;">${usage.cpu_usage}%</div>
+            </div>
+          </td>
+          <td>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar ${getColorClass(usage.gpu_usage)}" style="width: ${usage.gpu_usage}%;">${usage.gpu_usage}%</div>
+            </div>
+          </td>
+          <td>${usage.updated_at}</td>
+        </tr>`;
+      });
+    });
+}
+
+function getColorClass(percent) {
+  if (percent > 80) return 'bg-danger';
+  if (percent > 50) return 'bg-warning';
+  return 'bg-success';
+}
+
+setInterval(loadUsageData, 10000);
+</script>
 {% endblock %}
+
+

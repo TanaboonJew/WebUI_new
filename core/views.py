@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from .docker_utils import docker_manager, manage_container
 from .file_utils import ensure_workspace_exists
@@ -9,6 +9,9 @@ from .monitoring import get_system_stats, get_user_container_stats
 from django.contrib import messages
 from django.conf import settings
 from collections import defaultdict
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+from django.utils import timezone
 import os
 
 def home(request):
@@ -439,7 +442,71 @@ def health_check(request):
 def superuser_dashboard(request):
     if not request.user.is_superuser:
         return redirect('home')
-    return render(request, 'core/superuser_dashboard.html')
+
+    User = get_user_model()
+    users = User.objects.all()
+    usages = []
+
+    for user in users:
+        try:
+            container = DockerContainer.objects.get(user=user)
+            stats = get_user_container_stats(container.container_id)
+            docker_status = container.status
+            jupyter_status = 'running' if container.status == 'running' else 'stopped'
+            cpu_usage = stats.get('cpu_percent', 0)
+            gpu_usage = stats.get('gpu_percent', 0)
+        except DockerContainer.DoesNotExist:
+            docker_status = 'stopped'
+            jupyter_status = 'stopped'
+            cpu_usage = 0
+            gpu_usage = 0
+
+        usage = {
+            'user': user,
+            'docker_status': docker_status,
+            'jupyter_status': jupyter_status,
+            'disk_usage': 10,  # ตัวอย่าง จำลองไว้ก่อน
+            'cpu_usage': cpu_usage,
+            'gpu_usage': gpu_usage,
+            'updated_at': timezone.now()
+        }
+        usages.append(usage)
+
+    return render(request, 'core/superuser_dashboard.html', {'usages': usages})
+
+def api_usage_data(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    User = get_user_model()
+    users = User.objects.all()
+    usage_list = []
+
+    for user in users:
+        try:
+            container = DockerContainer.objects.get(user=user)
+            stats = get_user_container_stats(container.container_id)
+            docker_status = container.status
+            jupyter_status = 'running' if container.status == 'running' else 'stopped'
+            cpu_usage = stats.get('cpu_percent', 0)
+            gpu_usage = stats.get('gpu_percent', 0)
+        except DockerContainer.DoesNotExist:
+            docker_status = 'stopped'
+            jupyter_status = 'stopped'
+            cpu_usage = 0
+            gpu_usage = 0
+
+        usage_list.append({
+            'username': user.username,
+            'docker_status': docker_status,
+            'jupyter_status': jupyter_status,
+            'disk_usage': 10,  # mock value
+            'cpu_usage': cpu_usage,
+            'gpu_usage': gpu_usage,
+            'updated_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+    return JsonResponse({'usages': usage_list})
 
 @login_required
 def approve_users(request):
