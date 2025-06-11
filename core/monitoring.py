@@ -89,10 +89,9 @@ def get_user_container_stats(container_id):
             system_delta = system_cpu_current - system_cpu_previous
             cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
 
-        # ✅ GPU usage for this container only
-        gpu_percent = 0
+        # ✅ GPU memory usage per container (MB)
+        gpu_memory_mb = 0
         try:
-            # Step 1: Get container's PIDs
             inspect = docker_container.attrs
             pids = []
             pid_host = inspect["State"]["Pid"]
@@ -104,18 +103,20 @@ def get_user_container_stats(container_id):
                 except Exception as e:
                     print(f"[PID] Error reading children: {e}")
 
-            # Step 2: Initialize NVML
+            import pynvml
             pynvml.nvmlInit()
             handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+
             try:
                 processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
             except pynvml.NVMLError_NotSupported:
                 processes = []
 
-            # Step 3: Filter GPU usage by PIDs
             for proc in processes:
                 if proc.pid in pids:
-                    gpu_percent += getattr(proc, 'usedGpuMemory', 0)  # optional: sum GPU mem usage
+                    used_memory = getattr(proc, 'usedGpuMemory', 0)
+                    gpu_memory_mb += used_memory // (1024 * 1024)  # Convert to MB
+
             pynvml.nvmlShutdown()
 
         except Exception as e:
@@ -123,7 +124,7 @@ def get_user_container_stats(container_id):
 
         return {
             'cpu_percent': round(cpu_percent, 2),
-            'gpu_percent': round(gpu_percent, 2),  # Memory-based estimation
+            'gpu_memory_mb': gpu_memory_mb,
             'memory_usage': stats['memory_stats'].get('usage', 0),
             'memory_limit': stats['memory_stats'].get('limit', 0),
             'network': stats.get('networks', {}),
