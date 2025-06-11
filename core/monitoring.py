@@ -94,12 +94,15 @@ def get_user_container_stats(container_id):
         try:
             # Step 1: Get container's PIDs
             inspect = docker_container.attrs
-            pids = []
-            pid_host = inspect["State"]["Pid"]
-            if pid_host != 0:
-                # Get all PIDs inside container using host PID namespace
-                pids = os.popen(f"ls /proc/{pid_host}/task/*/children").read().split()
-                pids = list(map(int, pids))
+                pids = []
+                pid_host = inspect["State"]["Pid"]
+                if pid_host != 0:
+                    pids = [pid_host]
+                    try:
+                        children_output = os.popen(f"cat /proc/{pid_host}/task/{pid_host}/children").read()
+                        pids += [int(pid) for pid in children_output.strip().split()] if children_output.strip() else []
+                    except Exception as e:
+                        print(f"[PID] Error reading children: {e}")
 
             # Step 2: Initialize NVML
             pynvml.nvmlInit()
