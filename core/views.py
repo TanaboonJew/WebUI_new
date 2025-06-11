@@ -459,6 +459,8 @@ def superuser_dashboard(request):
             jupyter_status = 'running' if container.status == 'running' else 'stopped'
             cpu_usage = stats.get('cpu_percent', 0)
             gpu_usage = stats.get('gpu_percent', 0)
+            print(cpu_usage)
+            print(gpu_usage)
         else:
             docker_status = 'stopped'
             jupyter_status = 'stopped'
