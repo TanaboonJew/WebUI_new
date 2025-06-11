@@ -4,6 +4,7 @@ from docker.errors import DockerException
 import subprocess
 from .models import DockerContainer
 import pynvml
+import os
 
 try:
     docker_client = docker.from_env()
