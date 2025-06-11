@@ -86,8 +86,14 @@ def get_user_container_stats(container_id):
             system_delta = system_cpu_current - system_cpu_previous
             cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
 
+        gpu_percent = 0
+        if 'gpu_stats' in stats:
+            gpu_info = stats['gpu_stats']
+            gpu_percent = gpu_info.get('gpu_utilization', 0)
+
         return {
             'cpu_percent': round(cpu_percent, 2),
+            'gpu_percent': round(gpu_percent, 2),
             'memory_usage': stats['memory_stats'].get('usage', 0),
             'memory_limit': stats['memory_stats'].get('limit', 0),
             'network': stats.get('networks', {}),
@@ -96,4 +102,3 @@ def get_user_container_stats(container_id):
 
     except (DockerContainer.DoesNotExist, docker.errors.NotFound):
         return None
-
