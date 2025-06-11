@@ -73,6 +73,7 @@ def get_user_container_stats(container_id):
         container = DockerContainer.objects.get(container_id=container_id)
         docker_container = docker_client.containers.get(container_id)
 
+        # Get basic stats
         stats = docker_container.stats(stream=False)
         cpu_stats = stats['cpu_stats']
         precpu_stats = stats['precpu_stats']
@@ -87,20 +88,38 @@ def get_user_container_stats(container_id):
             system_delta = system_cpu_current - system_cpu_previous
             cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
 
-        # ✅ ดึง GPU utilization จาก pynvml
+        # ✅ GPU usage for this container only
         gpu_percent = 0
         try:
+            # Step 1: Get container's PIDs
+            inspect = docker_container.attrs
+            pids = []
+            pid_host = inspect["State"]["Pid"]
+            if pid_host != 0:
+                # Get all PIDs inside container using host PID namespace
+                pids = os.popen(f"ls /proc/{pid_host}/task/*/children").read().split()
+                pids = list(map(int, pids))
+
+            # Step 2: Initialize NVML
             pynvml.nvmlInit()
             handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-            util = pynvml.nvmlDeviceGetUtilizationRates(handle)
-            gpu_percent = util.gpu
+            try:
+                processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
+            except pynvml.NVMLError_NotSupported:
+                processes = []
+
+            # Step 3: Filter GPU usage by PIDs
+            for proc in processes:
+                if proc.pid in pids:
+                    gpu_percent += getattr(proc, 'usedGpuMemory', 0)  # optional: sum GPU mem usage
             pynvml.nvmlShutdown()
+
         except Exception as e:
             print(f"[GPU] Error using pynvml: {e}")
 
         return {
             'cpu_percent': round(cpu_percent, 2),
-            'gpu_percent': round(gpu_percent, 2),
+            'gpu_percent': round(gpu_percent, 2),  # Memory-based estimation
             'memory_usage': stats['memory_stats'].get('usage', 0),
             'memory_limit': stats['memory_stats'].get('limit', 0),
             'network': stats.get('networks', {}),
