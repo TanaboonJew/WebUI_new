@@ -3,6 +3,7 @@ import docker
 from docker.errors import DockerException
 import subprocess
 from .models import DockerContainer
+import pynvml
 
 try:
     docker_client = docker.from_env()
@@ -86,10 +87,16 @@ def get_user_container_stats(container_id):
             system_delta = system_cpu_current - system_cpu_previous
             cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
 
+        # ✅ ดึง GPU utilization จาก pynvml
         gpu_percent = 0
-        if 'gpu_stats' in stats:
-            gpu_info = stats['gpu_stats']
-            gpu_percent = gpu_info.get('gpu_utilization', 0)
+        try:
+            pynvml.nvmlInit()
+            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+            util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+            gpu_percent = util.gpu
+            pynvml.nvmlShutdown()
+        except Exception as e:
+            print(f"[GPU] Error using pynvml: {e}")
 
         return {
             'cpu_percent': round(cpu_percent, 2),
