@@ -91,14 +91,16 @@ function createRow(usage) {
       <td>${usage.disk_usage}</td>
       <td>
         <div class="progress" style="height: 20px;">
-          <div class="progress-bar ${getColorClass(usage.cpu_usage)}" style="width: ${usage.cpu_usage}%;">
+          <div class="progress-bar ${getColorClass(usage.cpu_usage)}" style="width: ${usage.cpu_usage}%;"
+               role="progressbar" aria-valuenow="${usage.cpu_usage}" aria-valuemin="0" aria-valuemax="100">
             ${usage.cpu_usage}%
           </div>
         </div>
       </td>
       <td>
         <div class="progress" style="height: 20px;">
-          <div class="progress-bar ${getColorClass(usage.gpu_usage)}" style="width: ${usage.gpu_usage}%;">
+          <div class="progress-bar ${getColorClass(usage.gpu_usage)}" style="width: ${usage.gpu_usage}%;"
+               role="progressbar" aria-valuenow="${usage.gpu_usage}" aria-valuemin="0" aria-valuemax="100">
             ${usage.gpu_usage}%
           </div>
         </div>
@@ -108,23 +110,40 @@ function createRow(usage) {
   `;
 }
 
-function loadUsageData() {
-  fetch("{% url 'api_usage_data' %}")
-    .then(response => {
-      if (!response.ok) throw new Error("Network error");
-      return response.json();
-    })
-    .then(data => {
+function setupWebSocket() {
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsUrl = `${protocol}://${window.location.host}/ws/monitoring/`;
+  const socket = new WebSocket(wsUrl);
+
+  socket.onopen = function() {
+    console.log("WebSocket connected.");
+  };
+
+  socket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+
+    if(data.usages) {
       const tbody = document.getElementById("usage-table-body");
-      tbody.innerHTML = "";  // Clear old rows
+      tbody.innerHTML = "";
       data.usages.forEach(usage => {
         tbody.insertAdjacentHTML("beforeend", createRow(usage));
       });
-    })
-    .catch(error => {
-      console.error("Failed to load usage data:", error);
-    });
+    }
+  };
+
+  socket.onclose = function() {
+    console.log("WebSocket disconnected. Reconnecting in 5 seconds...");
+    setTimeout(setupWebSocket, 5000);
+  };
+
+  socket.onerror = function(error) {
+    console.error("WebSocket error:", error);
+    socket.close();
+  };
 }
 
+document.addEventListener("DOMContentLoaded", function() {
+  setupWebSocket();
+});
 </script>
 {% endblock %}
