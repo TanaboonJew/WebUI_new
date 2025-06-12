@@ -12,7 +12,7 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if container_status == 'running' %}
+                    {% if container.status == 'running' %}
                     <div class="alert alert-success">
                         Notebook is running!<br>
                         {% if jupyter_token %}
@@ -32,7 +32,7 @@
                             <i class="fas fa-trash"></i> Delete Notebook
                         </button>
                     </form>
-                    {% elif container_status == 'running' %}
+                    {% elif container.status == 'running' %}
                     <div class="alert alert-warning">
                         Notebook is running but token or URL not available.
                     </div>
@@ -52,17 +52,6 @@
                         </button>
                     </form>
                     {% endif %}
-                </div>
-                <div class="card-footer">
-                    <small>Storage: {{ user.storage_used|filesizeformat }} / {{ user.storage_limit|filesizeformat }}</small>
-                    <br>
-                    <small>Status: 
-                        {% if container_status %}
-                            <strong>{{ container_status|capfirst }}</strong>
-                        {% else %}
-                            <em>Not running</em>
-                        {% endif %}
-                    </small>
                 </div>
             </div>
         </div>
