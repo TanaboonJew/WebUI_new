@@ -325,7 +325,7 @@ def ai_dashboard(request):
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'form': form,
-        'container': container,
+        'container': containers,
         'jupyter_url': jupyter_url,
         'jupyter_token': jupyter_token,
         'container_stats': container_stats,
