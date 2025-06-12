@@ -12,79 +12,69 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% with None as running_container %}
-                        {% for c in containers %}
-                            {% if 'jupyter' in c.image_name|lower and c.status == 'running' %}
-                                {% with c as running_container %}
-                                    {% break %}
-                                {% endwith %}
+                    {% if container and container.status == 'running' %}
+                        <div class="alert alert-success">
+                            Notebook is running!<br>
+                            {% if jupyter_token %}
+                                <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
                             {% endif %}
-                        {% endfor %}
-
-                        {% if running_container %}
-                            <div class="alert alert-success">
-                                Notebook is running!<br>
-                                {% if jupyter_token %}
-                                    <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
-                                {% endif %}
-                                <strong>Container ID:</strong> <code>{{ running_container.container_id }}</code>
-                            </div>
-
-                            {% if container_stats %}
-                            <div class="mb-3">
-                                <h6>Container Usage:</h6>
-                                <ul class="list-group">
-                                    <li class="list-group-item">CPU: {{ container_stats.cpu }}%</li>
-                                    <li class="list-group-item">
-                                        Memory: {{ container_stats.memory|floatformat:2 }} MB 
-                                        ({{ container_stats.memory_percent|floatformat:1 }}%)
-                                    </li>
-                                    <li class="list-group-item">
-                                        Network In: {{ container_stats.network.rx|floatformat:2 }} MB
-                                    </li>
-                                    <li class="list-group-item">
-                                        Network Out: {{ container_stats.network.tx|floatformat:2 }} MB
-                                    </li>
-                                </ul>
-                            </div>
-                            {% endif %}
-
-                            <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
-                                <i class="fas fa-external-link-alt"></i> Open Notebook
-                            </a>
-                            <form method="post" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" name="stop_jupyter" class="btn btn-danger">
-                                    <i class="fas fa-stop"></i> Stop Notebook
-                                </button>
-                                <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
-                                    <i class="fas fa-trash"></i> Delete Notebook
-                                </button>
-                            </form>
-
-                        {% else %}
-                            <form method="post">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="framework" class="form-label">Select Framework</label>
-                                    <select name="framework" id="framework" class="form-control" required>
-                                        <option value="" disabled selected>-- Select Framework --</option>
-                                        <option value="tensorflow">TensorFlow</option>
-                                        <option value="pytorch">PyTorch</option>
-                                    </select>
-                                </div>
-                                <button type="submit" name="start_jupyter" class="btn btn-primary">
-                                    <i class="fas fa-rocket"></i> Launch Notebook
-                                </button>
-                            </form>
+                            <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
+                        </div>
+                        
+                        {% if container_stats %}
+                        <div class="mb-3">
+                            <h6>Container Usage:</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item">CPU: {{ container_stats.cpu }}%</li>
+                                <li class="list-group-item">
+                                    Memory: {{ container_stats.memory|floatformat:2 }} MB 
+                                    ({{ container_stats.memory_percent|floatformat:1 }}%)
+                                </li>
+                                <li class="list-group-item">
+                                    Network In: {{ container_stats.network.rx|floatformat:2 }} MB
+                                </li>
+                                <li class="list-group-item">
+                                    Network Out: {{ container_stats.network.tx|floatformat:2 }} MB
+                                </li>
+                            </ul>
+                        </div>
                         {% endif %}
-                    {% endwith %}
+
+                        <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
+                            <i class="fas fa-external-link-alt"></i> Open Notebook
+                        </a>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" name="stop_jupyter" class="btn btn-danger">
+                                <i class="fas fa-stop"></i> Stop Notebook
+                            </button>
+                            <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
+                                <i class="fas fa-trash"></i> Delete Notebook
+                            </button>
+                        </form>
+
+                    {% else %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="framework" class="form-label">Select Framework</label>
+                                <select name="framework" id="framework" class="form-control" required>
+                                    <option value="" disabled selected>-- Select Framework --</option>
+                                    <option value="tensorflow">TensorFlow</option>
+                                    <option value="pytorch">PyTorch</option>
+                                </select>
+                            </div>
+                            <button type="submit" name="start_jupyter" class="btn btn-primary">
+                                <i class="fas fa-rocket"></i> Launch Notebook
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
                     <small>Storage: {{ storage_used|filesizeformat }} / {{ storage_limit|filesizeformat }}</small><br>
                     <small>Status: 
-                        {% if running_container %}
-                            <strong>{{ running_container.status|capfirst }}</strong>
+                        {% if container %}
+                            <strong>{{ container.status|capfirst }}</strong>
                         {% else %}
                             <em>Not running</em>
                         {% endif %}
