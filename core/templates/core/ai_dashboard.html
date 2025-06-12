@@ -21,7 +21,7 @@
                         <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
                     </div>
                     {% if jupyter_token %}
-                        <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
+                        <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
                             <i class="fas fa-external-link-alt"></i> Open Notebook
                         </a>
                     {% endif %}
@@ -29,7 +29,7 @@
                     <form method="post" class="d-inline">
                         {% csrf_token %}
                         {% if container.status == 'stopped' %}    
-                            <button type="submit" name="start_jupyter" class="btn btn-danger">
+                            <button type="submit" name="start_jupyter" class="btn btn-success">
                                 <i class="fas fa-stop"></i> Start Notebook
                             </button>   
                         {% elif container.status == 'running' %}
@@ -47,7 +47,7 @@
                         Notebook is running but token or URL not available.
                     </div>
                     {% else %}
-                    
+
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
@@ -132,4 +132,15 @@
         </div>
     </div>
 </div>
+{% if messages %}
+<script>
+    // รอโหลด DOM เสร็จแล้วค่อยทำงาน
+    document.addEventListener('DOMContentLoaded', function () {
+        // รอ 1 วินาที (1000 มิลลิวินาที) แล้วรีเฟรชหน้า
+        setTimeout(function () {
+            location.reload();
+        }, 1000);
+    });
+</script>
+{% endif %}
 {% endblock %}
