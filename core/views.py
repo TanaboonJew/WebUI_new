@@ -225,24 +225,27 @@ def ai_dashboard(request):
     container_stats = None
     container = None
 
-    containers = DockerContainer.objects.filter(user=request.user).first()
+    container = DockerContainer.objects.filter(user=request.user).first()
 
-    for c in containers:
-        live_status = docker_manager.get_container_status(c.container_id)
+    if container:
+        live_status = docker_manager.get_container_status(container.container_id)
         if live_status:
-            if c.status != live_status:
-                c.status = live_status
-                c.save()
+            if container.status != live_status:
+                container.status = live_status
+                container.save()
         else:
-            if c.status != 'not found':
-                c.status = 'not found'
-                c.save()
-                
-        if 'jupyter' in c.image_name.lower() and c.status == 'running':
-            container = c
-            container_stats = docker_manager.get_container_stats(c.container_id)
-            jupyter_url, jupyter_token = docker_manager.get_jupyter_info(c.container_id)
-            break
+            if container.status != 'not found':
+                container.status = 'not found'
+                container.save()
+        
+        if 'jupyter' in container.image_name.lower() and container.status == 'running':
+            container_stats = docker_manager.get_container_stats(container.container_id)
+            jupyter_url, jupyter_token = docker_manager.get_jupyter_info(container.container_id)
+    else:
+        container_stats = None
+        jupyter_url = None
+        jupyter_token = None
+
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
