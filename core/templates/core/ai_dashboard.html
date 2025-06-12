@@ -134,12 +134,16 @@
 </div>
 {% if messages %}
 <script>
-    // รอโหลด DOM เสร็จแล้วค่อยทำงาน
     document.addEventListener('DOMContentLoaded', function () {
-        // รอ 1 วินาที (1000 มิลลิวินาที) แล้วรีเฟรชหน้า
-        setTimeout(function () {
-            location.reload();
-        }, 1000);
+        sessionStorage.setItem('shouldReloadOnce', 'true');
+
+        const shouldReload = sessionStorage.getItem('shouldReloadOnce');
+        if (shouldReload === 'true') {
+            sessionStorage.removeItem('shouldReloadOnce');
+            setTimeout(function () {
+                location.reload();
+            }, 1000);
+        }
     });
 </script>
 {% endif %}

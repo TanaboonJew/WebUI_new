@@ -278,6 +278,7 @@ def ai_dashboard(request):
                 container_status = 'stopped'
             else:
                 messages.error(request, "Failed to stop Jupyter Notebook")
+            return redirect('ai-dashboard')
 
         elif 'delete_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'delete', container_type='jupyter'):
@@ -285,6 +286,7 @@ def ai_dashboard(request):
                 container_status = None
             else:
                 messages.error(request, "Failed to delete Jupyter Notebook container")
+            return redirect('ai-dashboard')
 
         elif 'upload_model' in request.POST:
             form = AIModelForm(request.POST, request.FILES)
