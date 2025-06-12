@@ -33,14 +33,20 @@ class MonitoringConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_system_stats(self):
-        client = docker.from_env()
-        stats = {
-            'cpu': psutil.cpu_percent(),
-            'memory': psutil.virtual_memory().percent,
-            'containers': len(client.containers.list()),
-            'active_users': DockerContainer.objects.filter(status='running').count()
-        }
-        return stats
+        usages = []
+        # สมมติ query DockerContainer หรือ model ที่เก็บ usage ของแต่ละ user
+        containers = DockerContainer.objects.all()
+        for c in containers:
+            usages.append({
+                'username': c.user.username,
+                'docker_status': c.status,
+                'jupyter_status': c.jupyter_status if hasattr(c, 'jupyter_status') else 'stopped',
+                'disk_usage': c.disk_usage if hasattr(c, 'disk_usage') else 'N/A',
+                'cpu_usage': c.cpu_usage if hasattr(c, 'cpu_usage') else 0,
+                'gpu_usage': c.gpu_usage if hasattr(c, 'gpu_usage') else 0,
+                'updated_at': c.updated_at.strftime('%Y-%m-%d %H:%M:%S') if c.updated_at else ''
+            })
+        return {'usages': usages}
 
 class ContainerConsumer(AsyncWebsocketConsumer):  # Add this class
     async def connect(self):
