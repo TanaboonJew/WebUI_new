@@ -12,7 +12,7 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if container.status == 'running' %}
+                    {% if containers.status == 'running' %}
                         <div class="alert alert-success">
                             Notebook is running!<br>
                             {% if jupyter_token %}
