@@ -12,15 +12,13 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if container.status == 'running' %}
+                    {% if jupyter_container and jupyter_container.status == 'running' %}
                         <div class="alert alert-success">
                             Notebook is running!<br>
                             {% if jupyter_token %}
                                 <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
                             {% endif %}
-                            {% if container_id %}
-                                <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
-                            {% endif %}
+                            <strong>Container ID:</strong> <code>{{ jupyter_container.container_id }}</code>
                         </div>
                         
                         {% if container_stats %}
@@ -73,10 +71,10 @@
                     {% endif %}
                 </div>
                 <div class="card-footer">
-                    <small>Storage: {{ user.storage_used|filesizeformat }} / {{ user.storage_limit|filesizeformat }}</small><br>
+                    <small>Storage: {{ storage_used|filesizeformat }} / {{ storage_limit|filesizeformat }}</small><br>
                     <small>Status: 
-                        {% if container_status %}
-                            <strong>{{ container_status|capfirst }}</strong>
+                        {% if jupyter_container %}
+                            <strong>{{ jupyter_container.status|capfirst }}</strong>
                         {% else %}
                             <em>Not running</em>
                         {% endif %}
@@ -134,9 +132,12 @@
                                 <a href="{{ model.model_file.url }}" class="btn btn-sm btn-info" download>
                                     <i class="fas fa-download"></i> Download
                                 </a>
-                                <a href="{% url 'delete-model' model.id %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i> Delete
-                                </a>
+                                <form method="post" action="{% url 'delete-model' model.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this model?');">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% empty %}

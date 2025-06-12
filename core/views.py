@@ -219,33 +219,26 @@ def private_dashboard(request):
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
     form = AIModelForm()
-    jupyter_token = None
+
     jupyter_url = None
-    container_id = None
-    container_status = None
+    jupyter_token = None
     container_stats = None
 
-    container = DockerContainer.objects.filter(user=request.user, image_name__icontains='jupyter').first()
+    containers = DockerContainer.objects.filter(user=request.user)
 
-    if container:
-        container_id = container.container_id
-
-        live_status = docker_manager.get_container_status(container_id)
-
+    for container in containers:
+        live_status = docker_manager.get_container_status(container.container_id)
         if live_status:
-            container_status = live_status
             if container.status != live_status:
                 container.status = live_status
                 container.save()
         else:
-            container_status = 'not found'
             if container.status != 'not found':
                 container.status = 'not found'
                 container.save()
 
-        # container stats
-        if container_status == 'running':
-            container_stats = docker_manager.get_container_stats(container_id)
+        if 'jupyter' in container.image_name.lower() and container.status == 'running':
+            container_stats = docker_manager.get_container_stats(container.container_id)
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
@@ -276,7 +269,6 @@ def ai_dashboard(request):
                 else:
                     jupyter_url = result
 
-                container_status = 'running'
                 messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")
             else:
                 messages.error(request, "Failed to start Jupyter Notebook")
@@ -286,7 +278,6 @@ def ai_dashboard(request):
         elif 'stop_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'stop', container_type='jupyter'):
                 messages.success(request, "Jupyter Notebook stopped successfully")
-                container_status = 'stopped'
             else:
                 messages.error(request, "Failed to stop Jupyter Notebook")
 
@@ -295,7 +286,6 @@ def ai_dashboard(request):
         elif 'delete_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'delete', container_type='jupyter'):
                 messages.success(request, "Jupyter Notebook container deleted successfully")
-                container_status = None
             else:
                 messages.error(request, "Failed to delete Jupyter Notebook container")
 
@@ -327,10 +317,9 @@ def ai_dashboard(request):
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'form': form,
-        'jupyter_token': jupyter_token,
+        'containers': containers,
         'jupyter_url': jupyter_url,
-        'container_status': container_status,
-        'container_id': container_id,
+        'jupyter_token': jupyter_token,
         'container_stats': container_stats,
     })
 
