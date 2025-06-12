@@ -215,10 +215,6 @@ def private_dashboard(request):
         'container': container
     })
 
-
-from docker_manager import docker_manager  # Make sure this is correctly imported
-from docker_manager.models import DockerContainer  # adjust import to your project structure
-
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
