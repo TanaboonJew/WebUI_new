@@ -9,10 +9,27 @@ from .models import DockerContainer
 class MonitoringConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
-        while True:
-            data = await self.get_system_stats()
-            await self.send(text_data=json.dumps(data))
-            await asyncio.sleep(2)
+        self.keep_sending = True
+        self.task = asyncio.create_task(self.send_stats_loop())
+
+    async def disconnect(self, close_code):
+        self.keep_sending = False
+        if self.task:
+            self.task.cancel()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
+
+    async def send_stats_loop(self):
+        while self.keep_sending:
+            try:
+                data = await self.get_system_stats()
+                await self.send(text_data=json.dumps(data))
+                await asyncio.sleep(2)
+            except Exception as e:
+                print(f"Error sending stats: {e}")
+                break
 
     @database_sync_to_async
     def get_system_stats(self):
