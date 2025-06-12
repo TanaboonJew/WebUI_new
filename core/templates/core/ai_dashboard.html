@@ -12,7 +12,7 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if container and container.status == 'running' %}
+                    {% if container.status == 'running' %}
                         <div class="alert alert-success">
                             Notebook is running!<br>
                             {% if jupyter_token %}
@@ -20,25 +20,6 @@
                             {% endif %}
                             <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
                         </div>
-                        
-                        {% if container_stats %}
-                        <div class="mb-3">
-                            <h6>Container Usage:</h6>
-                            <ul class="list-group">
-                                <li class="list-group-item">CPU: {{ container_stats.cpu }}%</li>
-                                <li class="list-group-item">
-                                    Memory: {{ container_stats.memory|floatformat:2 }} MB 
-                                    ({{ container_stats.memory_percent|floatformat:1 }}%)
-                                </li>
-                                <li class="list-group-item">
-                                    Network In: {{ container_stats.network.rx|floatformat:2 }} MB
-                                </li>
-                                <li class="list-group-item">
-                                    Network Out: {{ container_stats.network.tx|floatformat:2 }} MB
-                                </li>
-                            </ul>
-                        </div>
-                        {% endif %}
 
                         <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
                             <i class="fas fa-external-link-alt"></i> Open Notebook
