@@ -318,7 +318,6 @@ def ai_dashboard(request):
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
 
-    print(containers.status)
     print("containers:", containers)
     print("jupyter_url:", jupyter_url)
     print("jupyter_token:", jupyter_token)
