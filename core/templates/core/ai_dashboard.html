@@ -12,12 +12,10 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if container.status == 'running' %}
+                    {% if container.status == 'running' or container.status == "stopped" %}
                         <div class="alert alert-success">
                             Notebook is running!<br>
-                            {% if jupyter_token %}
-                                <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
-                            {% endif %}
+                            <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
                             <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
                         </div>
 
@@ -26,9 +24,15 @@
                         </a>
                         <form method="post" class="d-inline">
                             {% csrf_token %}
-                            <button type="submit" name="stop_jupyter" class="btn btn-danger">
-                                <i class="fas fa-stop"></i> Stop Notebook
-                            </button>
+                            {% if container.status == 'running'%}
+                                <button type="submit" name="stop_jupyter" class="btn btn-danger">
+                                    <i class="fas fa-stop"></i> Stop Notebook
+                                </button>
+                            {% else %}
+                                <button type="submit" name="start_jupyter" class="btn btn-danger">
+                                    <i class="fas fa-stop"></i> Start Notebook
+                                </button>
+                            {% endif %}
                             <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
                                 <i class="fas fa-trash"></i> Delete Notebook
                             </button>
