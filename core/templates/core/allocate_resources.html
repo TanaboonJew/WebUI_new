@@ -1,0 +1,38 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3>Allocate Resources for {{ user_obj.username }}</h3>
+  
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>RAM Limit (MB)</label>
+      <input type="number" name="ram_limit" class="form-control" value="{{ user_obj.ram_limit }}" required>
+    </div>
+
+    <div class="form-group mt-2">
+      <label>Storage Limit (MB)</label>
+      <input type="number" name="storage_limit" class="form-control" value="{{ user_obj.storage_limit }}" required>
+    </div>
+
+    <div class="form-group mt-2">
+      <label>CPU Limit (Cores)</label>
+      <input type="number" name="cpu_limit" class="form-control" value="{{ user_obj.cpu_limit }}" required>
+    </div>
+
+    <div class="form-check mt-3">
+      <input type="checkbox" class="form-check-input" name="gpu_access" id="gpu_access" {% if user_obj.gpu_access %}checked{% endif %}>
+      <label class="form-check-label" for="gpu_access">Enable GPU Access</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Save</button>
+    <a href="{% url 'superuser-dashboard' %}" class="btn btn-secondary mt-3">Cancel</a>
+  </form>
+</div>
+{% endblock %}

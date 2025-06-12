@@ -13,10 +13,10 @@ class CustomUser(AbstractUser):
     intended_role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True, blank=True)
     role_verified = models.BooleanField(default=False)
 
-    ram_limit = models.PositiveIntegerField(default=15360)
+    ram_limit = models.PositiveIntegerField(default=12288)
     storage_limit = models.PositiveIntegerField(default=51200)
-    cpu_limit = models.PositiveIntegerField(default=4)
-    gpu_access = models.BooleanField(default=False)
+    cpu_limit = models.PositiveIntegerField(default=3)
+    gpu_access = models.BooleanField(default=True)
     active_container = models.OneToOneField(
         'core.DockerContainer',
         null=True,
