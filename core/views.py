@@ -224,7 +224,7 @@ def ai_dashboard(request):
     form = AIModelForm()
     container_status = None
 
-    # Fetch container status if exists
+    user_container = DockerContainer.objects.filter(user=request.user).first()
     try:
         container = DockerContainer.objects.get(user=request.user, image_name__icontains='jupyter')
         container_status = container.status
@@ -314,7 +314,7 @@ def ai_dashboard(request):
         'jupyter_token': jupyter_token,
         'jupyter_url': jupyter_url,
         'container_status': container_status,
-        'container_id': container_id,
+        'container': user_container,
     })
 
 
