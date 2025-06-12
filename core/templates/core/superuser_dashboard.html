@@ -21,30 +21,48 @@
         <tr>
           <td><strong>{{ usage.user.username }}</strong></td>
           <td>
-            <span class="badge {{ 'bg-success' if usage.docker_status == 'running' else 'bg-danger' }}">
-              {{ usage.docker_status }}
-            </span>
+            {% if usage.docker_status == "running" %}
+              <span class="badge bg-success">running</span>
+            {% else %}
+              <span class="badge bg-danger">stopped</span>
+            {% endif %}
           </td>
           <td>
-            <span class="badge {{ 'bg-success' if usage.jupyter_status == 'running' else 'bg-danger' }}">
-              {{ usage.jupyter_status }}
-            </span>
+            {% if usage.jupyter_status == "running" %}
+              <span class="badge bg-success">running</span>
+            {% else %}
+              <span class="badge bg-danger">stopped</span>
+            {% endif %}
           </td>
           <td>{{ usage.disk_usage }}</td>
           <td>
             <div class="progress" style="height: 20px;">
-              <div class="progress-bar {{ get_color_class(usage.cpu_usage) }}"
-                   role="progressbar"
-                   style="width: {{ usage.cpu_usage }}%;">
+              <div class="progress-bar 
+                  {% if usage.cpu_usage > 80 %}
+                    bg-danger
+                  {% elif usage.cpu_usage > 50 %}
+                    bg-warning
+                  {% else %}
+                    bg-success
+                  {% endif %}"
+                  role="progressbar"
+                  style="width: {{ usage.cpu_usage }}%;">
                 {{ usage.cpu_usage }}%
               </div>
             </div>
           </td>
           <td>
             <div class="progress" style="height: 20px;">
-              <div class="progress-bar {{ get_color_class(usage.gpu_usage) }}"
-                   role="progressbar"
-                   style="width: {{ usage.gpu_usage }}%;">
+              <div class="progress-bar 
+                  {% if usage.gpu_usage > 80 %}
+                    bg-danger
+                  {% elif usage.gpu_usage > 50 %}
+                    bg-warning
+                  {% else %}
+                    bg-success
+                  {% endif %}"
+                  role="progressbar"
+                  style="width: {{ usage.gpu_usage }}%;">
                 {{ usage.gpu_usage }}%
               </div>
             </div>
@@ -98,7 +116,7 @@ function loadUsageData() {
     })
     .then(data => {
       const tbody = document.getElementById("usage-table-body");
-      tbody.innerHTML = "";  // Clear previous rows
+      tbody.innerHTML = "";  // Clear old rows
       data.usages.forEach(usage => {
         tbody.insertAdjacentHTML("beforeend", createRow(usage));
       });
@@ -108,6 +126,5 @@ function loadUsageData() {
     });
 }
 
-setInterval(loadUsageData, 2000);
 </script>
 {% endblock %}
