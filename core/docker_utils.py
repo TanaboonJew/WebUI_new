@@ -234,6 +234,20 @@ class DockerManager:
         except Exception as e:
             logger.error(f"Stats collection failed: {e}")
             return None
+        
+    def get_container_status(self, container_id: str) -> Optional[str]:
+    
+    if not self.client:
+        return None
+
+    try:
+        container = self.client.containers.get(container_id)
+        return container.status  # 'running', 'exited', 'created'
+    except docker.errors.NotFound:
+        return None
+    except Exception as e:
+        logger.error(f"Failed to get container status: {e}")
+        return None
 
     def start_or_resume_container(self, user: CustomUser, image_name: str, container_type: str = 'jupyter') -> Tuple[Optional[str], Optional[str]]:
         if not self.client:

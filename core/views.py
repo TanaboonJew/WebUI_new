@@ -218,20 +218,34 @@ def private_dashboard(request):
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
+    form = AIModelForm()
     jupyter_token = None
     jupyter_url = None
     container_id = None
-    form = AIModelForm()
     container_status = None
+    container_stats = None
 
-    # Fetch container status if exists
-    try:
-        container = DockerContainer.objects.get(user=request.user, image_name__icontains='jupyter')
-        container_status = container.status
+    container = DockerContainer.objects.filter(user=request.user, image_name__icontains='jupyter').first()
+
+    if container:
         container_id = container.container_id
-    except DockerContainer.DoesNotExist:
-        container_status = None
-        container_id = None
+
+        live_status = docker_manager.get_container_status(container_id)
+
+        if live_status:
+            container_status = live_status
+            if container.status != live_status:
+                container.status = live_status
+                container.save()
+        else:
+            container_status = 'not found'
+            if container.status != 'not found':
+                container.status = 'not found'
+                container.save()
+
+        # container stats
+        if container_status == 'running':
+            container_stats = docker_manager.get_container_stats(container_id)
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
@@ -240,35 +254,34 @@ def ai_dashboard(request):
                 messages.error(request, "No framework selected.")
                 return redirect('ai-dashboard')
 
-            framework = framework.lower().strip()
-
             image_map = {
                 'tensorflow': 'my-tf',
                 'pytorch': 'my-torch',
             }
+            image_name = image_map.get(framework.lower().strip())
 
-            if framework not in image_map:
+            if not image_name:
                 messages.error(request, f"Unsupported framework: {framework}")
                 return redirect('ai-dashboard')
 
-            image_name = image_map[framework]
-
-            container_result = docker_manager.start_or_resume_container(
+            result = docker_manager.start_or_resume_container(
                 request.user,
                 image_name=image_name,
                 container_type='jupyter'
             )
 
-            if container_result:
-                if isinstance(container_result, tuple) and len(container_result) == 2:
-                    jupyter_url, jupyter_token = container_result
+            if result:
+                if isinstance(result, tuple) and len(result) == 2:
+                    jupyter_url, jupyter_token = result
                 else:
-                    jupyter_url = container_result
-                    jupyter_token = None
+                    jupyter_url = result
+
                 container_status = 'running'
                 messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")
             else:
                 messages.error(request, "Failed to start Jupyter Notebook")
+
+            return redirect('ai-dashboard')
 
         elif 'stop_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'stop', container_type='jupyter'):
@@ -277,12 +290,16 @@ def ai_dashboard(request):
             else:
                 messages.error(request, "Failed to stop Jupyter Notebook")
 
+            return redirect('ai-dashboard')
+
         elif 'delete_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'delete', container_type='jupyter'):
                 messages.success(request, "Jupyter Notebook container deleted successfully")
                 container_status = None
             else:
                 messages.error(request, "Failed to delete Jupyter Notebook container")
+
+            return redirect('ai-dashboard')
 
         elif 'upload_model' in request.POST:
             form = AIModelForm(request.POST, request.FILES)
@@ -304,7 +321,6 @@ def ai_dashboard(request):
                     )
                     model.model_file.save(model_file.name, model_file)
                     model.save()
-
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
 
@@ -315,6 +331,7 @@ def ai_dashboard(request):
         'jupyter_url': jupyter_url,
         'container_status': container_status,
         'container_id': container_id,
+        'container_stats': container_stats,
     })
 
 
