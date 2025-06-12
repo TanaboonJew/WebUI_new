@@ -14,6 +14,7 @@
           <th>CPU (%)</th>
           <th>GPU (%)</th>
           <th>Last Updated</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="usage-table-body">
@@ -68,6 +69,11 @@
             </div>
           </td>
           <td>{{ usage.updated_at }}</td>
+          <td>
+            <a href="{% url 'allocate-resources' usage.user.id %}" class="btn btn-sm btn-primary">
+              Allocate Resources
+            </a>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -106,6 +112,9 @@ function createRow(usage) {
         </div>
       </td>
       <td>${usage.updated_at}</td>
+      <td>
+        <a href="/allocate/${usage.id}/" class="btn btn-sm btn-primary">Allocate Resources</a>
+      </td>
     </tr>
   `;
 }
