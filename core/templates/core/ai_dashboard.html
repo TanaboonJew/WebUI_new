@@ -12,13 +12,13 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if jupyter_container and jupyter_container.status == 'running' %}
+                    {% if container.status == 'running' %}
                         <div class="alert alert-success">
                             Notebook is running!<br>
                             {% if jupyter_token %}
                                 <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
                             {% endif %}
-                            <strong>Container ID:</strong> <code>{{ jupyter_container.container_id }}</code>
+                            <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
                         </div>
                         
                         {% if container_stats %}
