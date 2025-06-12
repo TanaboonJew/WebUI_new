@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 
 {% block content %}
 <div class="container mt-4">
     <h2>AI Development Environment</h2>
-    
+
     <div class="row">
         <!-- Jupyter Notebook Section -->
         <div class="col-md-6">
@@ -13,45 +12,42 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if jupyter_url %}
-                    <div class="alert alert-success">
-                        Notebook is running! Token: <code>{{ jupyter_token }}</code>
-                    </div>
-                    <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
-                        <i class="fas fa-external-link-alt"></i> Open Notebook
-                    </a>
-                    <form method="post" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" name="stop_jupyter" class="btn btn-danger">
-                            <i class="fas fa-stop"></i> Stop Notebook
-                        </button>
-                    </form>
-                    {% elif jupyter_running %}
-                    <div class="alert alert-warning">
-                        Notebook is running but URL not available
-                    </div>
-                    {% else %}
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="model_id" class="form-label">Select Model</label>
-                            <select name="model_id" id="model_id" class="form-control" required>
-                                <option value="">-- Optional --</option>
-                                {% for model in models %}
-                                    <option value="{{ model.id }}">{{ model.name }} ({{ model.framework }})</option>
-                                {% endfor %}
-                            </select>
+                    {% if container %}
+                        <div class="alert alert-info">
+                            <strong>Container ID:</strong> {{ container.container_id }}<br>
+                            <strong>Status:</strong> {{ container.status|capfirst }}<br>
+                            <strong>Token:</strong> <code>{{ jupyter_token }}</code>
                         </div>
-                        {% if container_status == 'stopped' %}
-                            <button type="submit" name="start_jupyter" class="btn btn-warning">
-                                <i class="fas fa-play"></i> Start Notebook
+                        <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
+                            <i class="fas fa-external-link-alt"></i> Open Notebook
+                        </a>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" name="stop_jupyter" class="btn btn-danger">
+                                <i class="fas fa-stop"></i> Stop Notebook
                             </button>
-                        {% else %}
+                        </form>
+                        <form method="post" class="d-inline ms-2">
+                            {% csrf_token %}
+                            <button type="submit" name="delete_jupyter" class="btn btn-warning">
+                                <i class="fas fa-trash"></i> Delete Container
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="framework" class="form-label">Select Framework</label>
+                                <select name="framework" id="framework" class="form-control" required>
+                                    <option value="" disabled selected>-- Select Framework --</option>
+                                    <option value="tensorflow">TensorFlow</option>
+                                    <option value="pytorch">PyTorch</option>
+                                </select>
+                            </div>
                             <button type="submit" name="start_jupyter" class="btn btn-primary">
-                                <i class="fas fa-rocket"></i> Launch Notebook
+                                <i class="fas fa-rocket"></i> Launch Jupyter Notebook
                             </button>
-                        {% endif %}
-                    </form>
+                        </form>
                     {% endif %}
                 </div>
                 <div class="card-footer">
@@ -59,7 +55,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Model Upload Section -->
         <div class="col-md-6">
             <div class="card">
@@ -69,7 +65,19 @@
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        {{ form|crispy }}
+                        {{ form.non_field_errors }}
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Model Name</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_framework" class="form-label">Framework</label>
+                            {{ form.framework }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_model_file" class="form-label">Model File</label>
+                            {{ form.model_file }}
+                        </div>
                         <button type="submit" name="upload_model" class="btn btn-primary">
                             <i class="fas fa-upload"></i> Upload Model
                         </button>
@@ -78,7 +86,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Model List -->
     <div class="card mt-4">
         <div class="card-header bg-secondary text-white">
