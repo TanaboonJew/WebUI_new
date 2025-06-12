@@ -228,7 +228,7 @@ def ai_dashboard(request):
     if user_container:
         container_status = user_container.status
         if container_status == 'running':
-            jupyter_url = user_container.get_absolute_url()
+            jupyter_url = f"http://{settings.SERVER_IP}:{user_container.jupyter_port}/?token={user_container.jupyter_token}"
             jupyter_token = user_container.jupyter_token
 
     if request.method == 'POST':
