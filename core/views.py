@@ -216,12 +216,23 @@ def private_dashboard(request):
     })
 
 
+from docker_manager import docker_manager  # Make sure this is correctly imported
+from docker_manager.models import DockerContainer  # adjust import to your project structure
+
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
     jupyter_token = None
     jupyter_url = None
     form = AIModelForm()
+    container_status = None  # ← NEW
+
+    # Fetch container status if it exists
+    try:
+        container = DockerContainer.objects.get(user=request.user, image_name__icontains='jupyter')
+        container_status = container.status
+    except DockerContainer.DoesNotExist:
+        container_status = None
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
@@ -240,9 +251,6 @@ def ai_dashboard(request):
                     'pytorch': 'my-torch',    
                     'onnx': 'jupyter/scipy-notebook'             
                 }
-
-                print(f"Selected Model: {model.name}")
-                print(f"Framework: {framework}")
 
                 if framework not in image_map:
                     messages.error(request, f"Unsupported framework: {framework}")
@@ -264,6 +272,7 @@ def ai_dashboard(request):
                         jupyter_token = None
 
                     messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")
+                    container_status = 'running'
                 else:
                     messages.error(request, "Failed to start Jupyter Notebook")
 
@@ -274,6 +283,7 @@ def ai_dashboard(request):
         elif 'stop_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'stop', container_type='jupyter'):
                 messages.success(request, "Jupyter Notebook stopped successfully")
+                container_status = 'stopped'
             else:
                 messages.error(request, "Failed to stop Jupyter Notebook")
 
@@ -301,12 +311,12 @@ def ai_dashboard(request):
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
 
-    
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'form': form,
         'jupyter_token': jupyter_token,
         'jupyter_url': jupyter_url,
+        'container_status': container_status,  # ← NEW
     })
 
 
