@@ -233,16 +233,15 @@ def ai_dashboard(request):
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
-            framework = request.POST.get('framework')
+            framework = request.POST.get('framework', '').strip().lower()
             if not framework:
-                messages.error(request, "No framework selected.")
-                return redirect('ai-dashboard')
+                framework = 'tensorflow'
 
             image_map = {
                 'tensorflow': 'my-tf',
                 'pytorch': 'my-torch',
             }
-            framework = framework.lower().strip()
+
             if framework not in image_map:
                 messages.error(request, f"Unsupported framework: {framework}")
                 return redirect('ai-dashboard')
@@ -310,6 +309,7 @@ def ai_dashboard(request):
 
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
+
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'form': form,
