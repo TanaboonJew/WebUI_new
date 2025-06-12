@@ -12,54 +12,51 @@
                     Jupyter Notebook
                 </div>
                 <div class="card-body">
-                    {% if container.status == 'running' or container.status == "stopped" %}
-                        <div class="alert alert-success">
-                            Notebook is running!<br>
-                            <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
-                            <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
-                        </div>
-
-                        <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
-                            <i class="fas fa-external-link-alt"></i> Open Notebook
-                        </a>
-                        <form method="post" class="d-inline">
-                            {% csrf_token %}
-                            {% if container.status == 'running'%}
-                                <button type="submit" name="stop_jupyter" class="btn btn-danger">
-                                    <i class="fas fa-stop"></i> Stop Notebook
-                                </button>
-                            {% else %}
-                                <button type="submit" name="start_jupyter" class="btn btn-danger">
-                                    <i class="fas fa-stop"></i> Start Notebook
-                                </button>
-                            {% endif %}
-                            <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
-                                <i class="fas fa-trash"></i> Delete Notebook
-                            </button>
-                        </form>
-
+                    {% if container_status == 'running' and jupyter_token %}
+                    <div class="alert alert-success">
+                        Notebook is running!<br>
+                        <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
+                        <strong>Container ID:</strong> <code>{{ container_id }}</code>
+                    </div>
+                    <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
+                        <i class="fas fa-external-link-alt"></i> Open Notebook
+                    </a>
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" name="stop_jupyter" class="btn btn-danger">
+                            <i class="fas fa-stop"></i> Stop Notebook
+                        </button>
+                        <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete Notebook
+                        </button>
+                    </form>
+                    {% elif container_status == 'running' %}
+                    <div class="alert alert-warning">
+                        Notebook is running but token or URL not available.
+                    </div>
                     {% else %}
-                        <form method="post">
-                            {% csrf_token %}
-                            <div class="mb-3">
-                                <label for="framework" class="form-label">Select Framework</label>
-                                <select name="framework" id="framework" class="form-control" required>
-                                    <option value="" disabled selected>-- Select Framework --</option>
-                                    <option value="tensorflow">TensorFlow</option>
-                                    <option value="pytorch">PyTorch</option>
-                                </select>
-                            </div>
-                            <button type="submit" name="start_jupyter" class="btn btn-primary">
-                                <i class="fas fa-rocket"></i> Launch Notebook
-                            </button>
-                        </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="framework" class="form-label">Select Framework</label>
+                            <select name="framework" id="framework" class="form-control" required>
+                                <option value="" disabled selected>-- Select Framework --</option>
+                                <option value="tensorflow">TensorFlow</option>
+                                <option value="pytorch">PyTorch</option>
+                            </select>
+                        </div>
+                        <button type="submit" name="start_jupyter" class="btn btn-primary">
+                            <i class="fas fa-rocket"></i> Launch Notebook
+                        </button>
+                    </form>
                     {% endif %}
                 </div>
                 <div class="card-footer">
-                    <small>Storage: {{ storage_used|filesizeformat }} / {{ storage_limit|filesizeformat }}</small><br>
+                    <small>Storage: {{ user.storage_used|filesizeformat }} / {{ user.storage_limit|filesizeformat }}</small>
+                    <br>
                     <small>Status: 
-                        {% if container %}
-                            <strong>{{ container.status|capfirst }}</strong>
+                        {% if container_status %}
+                            <strong>{{ container_status|capfirst }}</strong>
                         {% else %}
                             <em>Not running</em>
                         {% endif %}
@@ -117,12 +114,9 @@
                                 <a href="{{ model.model_file.url }}" class="btn btn-sm btn-info" download>
                                     <i class="fas fa-download"></i> Download
                                 </a>
-                                <form method="post" action="{% url 'delete-model' model.id %}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this model?');">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </form>
+                                <a href="{% url 'delete-model' model.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
                             </td>
                         </tr>
                         {% empty %}
