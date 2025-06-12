@@ -218,11 +218,7 @@ def private_dashboard(request):
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
-    jupyter_token = None
-    jupyter_url = None
-    container_id = None
     form = AIModelForm()
-    container_status = None
 
     # Fetch container status if exists
     try:
