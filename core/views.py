@@ -225,7 +225,7 @@ def ai_dashboard(request):
     container_stats = None
     container = None
 
-    containers = DockerContainer.objects.filter(user=request.user)
+    containers = DockerContainer.objects.filter(user=request.user).first()
 
     for c in containers:
         live_status = docker_manager.get_container_status(c.container_id)
