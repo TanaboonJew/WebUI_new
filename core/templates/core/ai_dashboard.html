@@ -20,17 +20,19 @@
                         {% endif %}
                         <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
                     </div>
-                    <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
-                        <i class="fas fa-external-link-alt"></i> Open Notebook
-                    </a>
-                    {% if container.status == 'stopped' %}    
-                            <button type="submit" name="start_jupyter" class="btn btn-danger">
-                                <i class="fas fa-stop"></i> Start Notebook
-                            </button>
-                    {% endif %}    
+                    {% if jupyter_token %}
+                        <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success mb-2">
+                            <i class="fas fa-external-link-alt"></i> Open Notebook
+                        </a>
+                    {% endif %}
+   
                     <form method="post" class="d-inline">
                         {% csrf_token %}
-                        {% if container.status == 'running' %}
+                        {% if container.status == 'stopped' %}    
+                            <button type="submit" name="start_jupyter" class="btn btn-danger">
+                                <i class="fas fa-stop"></i> Start Notebook
+                            </button>   
+                        {% elif container.status == 'running' %}
                             <button type="submit" name="stop_jupyter" class="btn btn-danger">
                                 <i class="fas fa-stop"></i> Stop Notebook
                             </button>
@@ -39,11 +41,13 @@
                             <i class="fas fa-trash"></i> Delete Notebook
                         </button>
                     </form>
+
                     {% elif container.status == 'running' %}
                     <div class="alert alert-warning">
                         Notebook is running but token or URL not available.
                     </div>
                     {% else %}
+                    
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
