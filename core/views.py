@@ -273,6 +273,13 @@ def ai_dashboard(request):
 
             return redirect('ai-dashboard')
 
+        elif 'stop_jupyter' in request.POST:
+            if docker_manager.manage_container(request.user, 'stop', container_type='jupyter'):
+                messages.success(request, "Jupyter Notebook stopped successfully")
+                container_status = 'stopped'
+            else:
+                messages.error(request, "Failed to stop Jupyter Notebook")
+
         elif 'delete_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'delete', container_type='jupyter'):
                 messages.success(request, "Jupyter Notebook container deleted successfully")

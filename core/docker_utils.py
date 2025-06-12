@@ -236,6 +236,7 @@ class DockerManager:
             return None
 
     def start_or_resume_container(self, user: CustomUser, image_name: str, container_type: str = 'jupyter') -> Tuple[Optional[str], Optional[str]]:
+        logger.info(f"SERVER_IP = {settings.SERVER_IP}")
         if not self.client:
             return None, None
 
