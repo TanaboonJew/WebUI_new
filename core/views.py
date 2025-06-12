@@ -218,20 +218,18 @@ def private_dashboard(request):
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
-    jupyter_token = None
-    jupyter_url = None
-    container_id = None
     form = AIModelForm()
-    container_status = None
 
     user_container = DockerContainer.objects.filter(user=request.user).first()
-    try:
-        container = DockerContainer.objects.get(user=request.user, image_name__icontains='jupyter')
-        container_status = container.status
-        container_id = container.container_id
-    except DockerContainer.DoesNotExist:
-        container_status = None
-        container_id = None
+    jupyter_token = None
+    jupyter_url = None
+    container_status = None
+
+    if user_container:
+        container_status = user_container.status
+        if container_status == 'running':
+            jupyter_url = user_container.get_absolute_url()
+            jupyter_token = user_container.jupyter_token
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:
@@ -240,19 +238,16 @@ def ai_dashboard(request):
                 messages.error(request, "No framework selected.")
                 return redirect('ai-dashboard')
 
-            framework = framework.lower().strip()
-
             image_map = {
                 'tensorflow': 'my-tf',
                 'pytorch': 'my-torch',
             }
-
+            framework = framework.lower().strip()
             if framework not in image_map:
                 messages.error(request, f"Unsupported framework: {framework}")
                 return redirect('ai-dashboard')
 
             image_name = image_map[framework]
-
             container_result = docker_manager.start_or_resume_container(
                 request.user,
                 image_name=image_name,
@@ -265,17 +260,18 @@ def ai_dashboard(request):
                 else:
                     jupyter_url = container_result
                     jupyter_token = None
-                container_status = 'running'
+
+                # Save token and status
+                if user_container:
+                    user_container.jupyter_token = jupyter_token or ''
+                    user_container.status = 'running'
+                    user_container.save()
+
                 messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")
             else:
                 messages.error(request, "Failed to start Jupyter Notebook")
 
-        elif 'stop_jupyter' in request.POST:
-            if docker_manager.manage_container(request.user, 'stop', container_type='jupyter'):
-                messages.success(request, "Jupyter Notebook stopped successfully")
-                container_status = 'stopped'
-            else:
-                messages.error(request, "Failed to stop Jupyter Notebook")
+            return redirect('ai-dashboard')
 
         elif 'delete_jupyter' in request.POST:
             if docker_manager.manage_container(request.user, 'delete', container_type='jupyter'):
