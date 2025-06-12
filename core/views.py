@@ -215,10 +215,6 @@ def private_dashboard(request):
         'container': container
     })
 
-
-from docker_manager import docker_manager  # Make sure this is correctly imported
-from docker_manager.models import DockerContainer  # adjust import to your project structure
-
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
@@ -442,11 +438,6 @@ def file_action(request):
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 
-# temp for debug
-from django.http import HttpResponse
-
-def health_check(request):
-    return HttpResponse("OK", status=200)
 
 @login_required
 def superuser_dashboard(request):
@@ -560,3 +551,31 @@ def request_role_verification(request):
         user.role_verified = False  # not verified until approved again
         user.save()
     return redirect('home')
+
+@login_required
+def allocate_resources(request, user_id):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("You are not authorized to access this page.")
+
+    user = get_object_or_404(CustomUser, id=user_id)
+
+    if request.method == 'POST':
+        ram_limit = request.POST.get('ram_limit')
+        storage_limit = request.POST.get('storage_limit')
+        cpu_limit = request.POST.get('cpu_limit')
+        gpu_access = request.POST.get('gpu_access') == 'on'
+
+        try:
+            user.ram_limit = int(ram_limit)
+            user.storage_limit = int(storage_limit)
+            user.cpu_limit = int(cpu_limit)
+            user.gpu_access = gpu_access
+            user.save()
+            return redirect('superuser-dashboard')
+        except ValueError:
+            return render(request, 'core/allocate_resources.html', {
+                'user_obj': user,
+                'error': 'Invalid input. Please enter numbers only.'
+            })
+
+    return render(request, 'core/allocate_resources.html', {'user_obj': user})
