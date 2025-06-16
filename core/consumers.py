@@ -42,12 +42,25 @@ class MonitoringConsumer(AsyncWebsocketConsumer):
         }
         return stats
 
-class ContainerConsumer(AsyncWebsocketConsumer):  # Add this class
+class ContainerConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.container_id = self.scope['url_route']['kwargs']['container_id']
         await self.accept()
         
-        while True:
+        self.keep_sending = True
+        self.task = asyncio.create_task(self.send_stats_loop())
+
+    async def disconnect(self, close_code):
+        self.keep_sending = False
+        if self.task:
+            self.task.cancel()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
+
+    async def send_stats_loop(self):
+        while self.keep_sending:
             data = await self.get_container_stats()
             if data:
                 await self.send(text_data=json.dumps(data))
@@ -59,16 +72,34 @@ class ContainerConsumer(AsyncWebsocketConsumer):  # Add this class
             client = docker.from_env()
             container = client.containers.get(self.container_id)
             stats = container.stats(stream=False)
-            
+
+            # Calculate CPU %
             cpu_stats = stats['cpu_stats']
-            cpu_delta = cpu_stats['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage']
-            system_delta = cpu_stats['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage']
+            precpu_stats = stats['precpu_stats']
+            cpu_delta = cpu_stats['cpu_usage']['total_usage'] - precpu_stats['cpu_usage']['total_usage']
+            system_delta = cpu_stats['system_cpu_usage'] - precpu_stats['system_cpu_usage']
             cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
-            
+
+            # Memory usage
+            memory_usage = stats['memory_stats']['usage']
+            memory_limit = stats['memory_stats']['limit']
+            memory_percent = (memory_usage / memory_limit) * 100 if memory_limit else 0
+
+            # Network I/O
+            rx = tx = 0
+            if 'networks' in stats:
+                for iface in stats['networks'].values():
+                    rx += iface.get('rx_bytes', 0)
+                    tx += iface.get('tx_bytes', 0)
+
             return {
                 'cpu': round(cpu_percent, 2),
-                'memory': stats['memory_stats']['usage'] / (1024 * 1024),  # MB
-                'network': stats['networks']['eth0']['rx_bytes'] / (1024 * 1024)  # MB
+                'memory_usage': memory_usage,
+                'memory_limit': memory_limit,
+                'memory_percent': round(memory_percent, 2),
+                'network_rx': round(rx / (1024 * 1024), 2),  # MB
+                'network_tx': round(tx / (1024 * 1024), 2),  # MB
+                'status': container.status
             }
         except Exception as e:
             print(f"Container stats error: {str(e)}")

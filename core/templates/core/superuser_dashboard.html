@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
+
+<style>
+tr.updated {
+  animation: flash 0.3s ease-in-out;
+}
+
+@keyframes flash {
+  from { background-color: #ffffcc; }
+  to { background-color: transparent; }
+}
+</style>
+
 <div class="container mt-4">
   <h2 class="mb-4 text-center">System All Users Usage Dashboard</h2>
 
@@ -90,7 +102,7 @@ function getColorClass(percent) {
 
 function createRow(usage) {
   return `
-    <tr>
+    <tr id="row-${usage.username}">
       <td><strong>${usage.username}</strong></td>
       <td><span class="badge ${usage.docker_status === 'running' ? 'bg-success' : 'bg-danger'}">${usage.docker_status}</span></td>
       <td><span class="badge ${usage.jupyter_status === 'running' ? 'bg-success' : 'bg-danger'}">${usage.jupyter_status}</span></td>
@@ -130,12 +142,28 @@ function setupWebSocket() {
 
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
-
-    if(data.usages) {
+    if (data.usages) {
       const tbody = document.getElementById("usage-table-body");
-      tbody.innerHTML = "";
+
       data.usages.forEach(usage => {
-        tbody.insertAdjacentHTML("beforeend", createRow(usage));
+        const rowId = `row-${usage.username}`;
+        const newRowHtml = createRow(usage);
+        const existingRow = document.getElementById(rowId);
+
+        if (existingRow) {
+          // Replace only the specific row
+          const newRow = document.createElement('tr');
+          newRow.innerHTML = newRowHtml.trim();
+          newRow.id = rowId;
+          newRow.classList.add("updated");
+
+          existingRow.replaceWith(newRow);
+
+          // Remove flash class after animation
+          setTimeout(() => newRow.classList.remove("updated"), 300);
+        } else {
+          tbody.insertAdjacentHTML("beforeend", newRowHtml);
+        }
       });
     }
   };

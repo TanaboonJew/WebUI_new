@@ -122,9 +122,9 @@ class DockerManager:
                     image=f"{image_name}:latest",
                     name=container_name,
                     volumes={
-                        dirs['jupyter']: {'bind': '/home/jovyan/work', 'mode': 'rw'},
-                        dirs['models']: {'bind': '/home/jovyan/models', 'mode': 'ro'},
-                        dirs['data']: {'bind': '/home/jovyan/data', 'mode': 'ro'}
+                        dirs['jupyter']: {'bind': '/home/user/work', 'mode': 'rw'},
+                        dirs['models']: {'bind': '/home/user/models', 'mode': 'rw'},
+                        dirs['data']: {'bind': '/home/user/data', 'mode': 'rw'}
                     },
                     ports={'8888/tcp': port},
                     environment={
