@@ -50,17 +50,8 @@ tr.updated {
           <td>{{ usage.disk_usage }}</td>
           <td>
             <div class="progress" style="height: 20px;">
-              <div class="progress-bar 
-                  {% if usage.container_cpu_usage > 80 %}
-                    bg-danger
-                  {% elif usage.container_cpu_usage > 50 %}
-                    bg-warning
-                  {% else %}
-                    bg-success
-                  {% endif %}"
-                  role="progressbar"
-                  style="width: {{ usage.container_cpu_usage }}%;">
-                {{ usage.container_cpu_usage }}%
+              <div id="cpu-progress-{{ usage.id }}" class="progress-bar {% if usage.cpu_usage > 80 %}bg-danger{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ usage.cpu_usage }}%;">
+                <span id="cpu-text-{{ usage.id }}">{{ usage.cpu_usage }}%</span>
               </div>
             </div>
           </td>
@@ -104,20 +95,30 @@ function createRow(usage) {
   return `
     <tr id="row-${usage.username}">
       <td><strong>${usage.username}</strong></td>
-      <td><span class="badge ${usage.docker_status === 'running' ? 'bg-success' : 'bg-danger'}">${usage.docker_status}</span></td>
-      <td><span class="badge ${usage.jupyter_status === 'running' ? 'bg-success' : 'bg-danger'}">${usage.jupyter_status}</span></td>
+      <td>
+        <span class="badge ${usage.docker_status === 'running' ? 'bg-success' : 'bg-danger'}">
+          ${usage.docker_status}
+        </span>
+      </td>
+      <td>
+        <span class="badge ${usage.jupyter_status === 'running' ? 'bg-success' : 'bg-danger'}">
+          ${usage.jupyter_status}
+        </span>
+      </td>
       <td>${usage.disk_usage}</td>
       <td>
         <div class="progress" style="height: 20px;">
-          <div class="progress-bar ${getColorClass(usage.container_cpu_usage)}" style="width: ${usage.container_cpu_usage}%;"
-               role="progressbar" aria-valuenow="${usage.container_cpu_usage}" aria-valuemin="0" aria-valuemax="100">
-            ${usage.container_cpu_usage}%
+          <div class="progress-bar ${getColorClass(usage.cpu_usage)}" 
+               style="width: ${usage.cpu_usage}%;"
+               role="progressbar" aria-valuenow="${usage.cpu_usage}" aria-valuemin="0" aria-valuemax="100">
+            ${usage.cpu_usage}%
           </div>
         </div>
       </td>
       <td>
         <div class="progress" style="height: 20px;">
-          <div class="progress-bar ${getColorClass(usage.gpu_usage)}" style="width: ${usage.gpu_usage}%;"
+          <div class="progress-bar ${getColorClass(usage.gpu_usage)}" 
+               style="width: ${usage.gpu_usage}%;"
                role="progressbar" aria-valuenow="${usage.gpu_usage}" aria-valuemin="0" aria-valuemax="100">
             ${usage.gpu_usage}%
           </div>
@@ -129,6 +130,12 @@ function createRow(usage) {
       </td>
     </tr>
   `;
+}
+
+function getColorClass(percent) {
+  if (percent > 80) return 'bg-danger';
+  if (percent > 50) return 'bg-warning';
+  return 'bg-success';
 }
 
 function setupWebSocket() {
