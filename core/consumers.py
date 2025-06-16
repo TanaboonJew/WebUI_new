@@ -73,16 +73,17 @@ class ContainerConsumer(AsyncWebsocketConsumer):
             container = client.containers.get(self.container_id)
             stats = container.stats(stream=False)
 
-            # Calculate CPU %
+            # CPU %
             cpu_stats = stats['cpu_stats']
             precpu_stats = stats['precpu_stats']
             cpu_delta = cpu_stats['cpu_usage']['total_usage'] - precpu_stats['cpu_usage']['total_usage']
             system_delta = cpu_stats['system_cpu_usage'] - precpu_stats['system_cpu_usage']
             cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
 
-            # Memory usage
-            memory_usage = stats['memory_stats']['usage']
-            memory_limit = stats['memory_stats']['limit']
+            # Memory usage (exclude cache)
+            memory_stats = stats['memory_stats']
+            memory_usage = memory_stats.get('usage', 0) - memory_stats.get('stats', {}).get('cache', 0)
+            memory_limit = memory_stats.get('limit', 1)
             memory_percent = (memory_usage / memory_limit) * 100 if memory_limit else 0
 
             # Network I/O
