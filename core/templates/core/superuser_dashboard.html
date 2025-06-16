@@ -59,7 +59,7 @@ tr.updated {
                     bg-success
                   {% endif %}"
                   role="progressbar"
-                  style="width: {{ usage.cpu_usage }}%;">
+                  style="width: {{ container_stats.cpu_percent|default:0 }}%;">
                 {{ usage.cpu_usage }}%
               </div>
             </div>
