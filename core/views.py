@@ -506,7 +506,8 @@ def api_usage_data(request):
             docker_status = container.status
             jupyter_status = 'running' if container.status == 'running' else 'stopped'
             cpu_usage = stats.get('cpu_percent', 0)
-            gpu_usage = stats.get('gpu_percent', 0)
+            gpu_mem_used = stats.get('gpu_memory_used_mb', 0)
+            gpu_usage = round((gpu_mem_used / 80000) * 100, 2)
         else:
             docker_status = 'stopped'
             jupyter_status = 'stopped'

@@ -5,13 +5,11 @@ import random
 import shutil
 import socket
 import string
-import docker
-from docker.errors import DockerException
 from typing import Dict, Optional, Tuple
 from django.conf import settings
-from .models import DockerContainer, CustomUser  # ปรับตามโปรเจกต์คุณ
+from .models import DockerContainer, CustomUser
 import logging
-from docker.types import DeviceRequest
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -222,10 +220,27 @@ class DockerManager:
             mem_usage = memory.get('usage', 0)
             mem_limit = memory.get('limit', 1)
 
+            # === GPU Usage via nvidia-smi ===
+            container_pids = set()
+            top_result = container.top()
+            for proc in top_result.get('Processes', []):
+                container_pids.add(proc[1])  # PID column
+
+            result = subprocess.run(
+                ['nvidia-smi', '--query-compute-apps=pid,used_memory', '--format=csv,noheader,nounits'],
+                stdout=subprocess.PIPE, text=True
+            )
+            gpu_mem_mb = 0
+            for line in result.stdout.strip().split('\n'):
+                pid, mem = line.strip().split(',')
+                if pid.strip() in container_pids:
+                    gpu_mem_mb += int(mem.strip())
+
             return {
                 'cpu': round(cpu_percent, 2),
                 'memory': mem_usage / (1024 * 1024),
                 'memory_percent': (mem_usage / mem_limit) * 100,
+                'gpu_memory_mb': gpu_mem_mb,
                 'network': {
                     'rx': stats['networks']['eth0']['rx_bytes'] / (1024 * 1024),
                     'tx': stats['networks']['eth0']['tx_bytes'] / (1024 * 1024)
