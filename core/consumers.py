@@ -5,6 +5,8 @@ from channels.db import database_sync_to_async
 import docker
 import asyncio
 from .models import DockerContainer
+import os
+import pynvml
 
 class MonitoringConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -114,6 +116,33 @@ class ContainerConsumer(AsyncWebsocketConsumer):
                     rx += iface.get('rx_bytes', 0)
                     tx += iface.get('tx_bytes', 0)
 
+            # GPU usage
+            gpu_memory_mb = 0
+            try:
+                pid_host = container.attrs['State']['Pid']
+                pids = [pid_host]
+
+                children_output = os.popen(f"cat /proc/{pid_host}/task/{pid_host}/children").read()
+                pids += [int(pid) for pid in children_output.strip().split()] if children_output.strip() else []
+
+                pynvml.nvmlInit()
+                handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+
+                try:
+                    processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
+                except pynvml.NVMLError_NotSupported:
+                    processes = []
+
+                for proc in processes:
+                    if proc.pid in pids:
+                        used_memory = getattr(proc, 'usedGpuMemory', 0)
+                        gpu_memory_mb += used_memory // (1024 * 1024)
+
+                pynvml.nvmlShutdown()
+            except Exception as e:
+                print(f"[GPU] Error: {e}")
+                gpu_memory_mb = 0  # fallback
+
             return {
                 'cpu': round(cpu_percent, 2),
                 'memory_usage': memory_usage,
@@ -122,34 +151,9 @@ class ContainerConsumer(AsyncWebsocketConsumer):
                 'network_rx': round(rx / (1024 * 1024), 2),
                 'network_tx': round(tx / (1024 * 1024), 2),
                 'status': container.status,
-                'gpu_usage': gpu_memory_mb 
+                'gpu_usage': gpu_memory_mb
             }
+
         except Exception as e:
             print(f"Container stats error: {str(e)}")
             return None
-        
-        gpu_memory_mb = 0
-        
-        try:
-            pid_host = container.attrs['State']['Pid']
-            pids = [pid_host]
-
-            children_output = os.popen(f"cat /proc/{pid_host}/task/{pid_host}/children").read()
-            pids += [int(pid) for pid in children_output.strip().split()] if children_output.strip() else []
-
-            pynvml.nvmlInit()
-            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-
-            try:
-                processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
-            except pynvml.NVMLError_NotSupported:
-                processes = []
-
-            for proc in processes:
-                if proc.pid in pids:
-                    used_memory = getattr(proc, 'usedGpuMemory', 0)
-                    gpu_memory_mb += used_memory // (1024 * 1024) 
-
-            pynvml.nvmlShutdown()
-        except Exception as e:
-            print(f"[GPU] Error: {e}")
