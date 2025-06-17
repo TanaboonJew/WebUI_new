@@ -10,6 +10,7 @@ from django.conf import settings
 from .models import DockerContainer, CustomUser
 import logging
 import subprocess
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +134,9 @@ class DockerManager:
                     },
                     detach=True,
                     mem_limit=f"{user.ram_limit}m",
-                    cpu_shares=int(user.cpu_limit * 1024),
+                    memswap_limit=f"{user.memswap_limit}m",
+                    cpus=float(user.cpu_limit),
+                    storage_opt={"size": f"{user.storage_limit}m"},
                     runtime='nvidia' if user.gpu_access else None
                 )
 
@@ -284,6 +287,8 @@ class DockerManager:
         except Exception as e:
             logger.error(f"start_or_resume_container failed: {e}")
             return None, None
+        
+    
 
 
 # Global instance
