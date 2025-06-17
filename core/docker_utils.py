@@ -10,7 +10,6 @@ from django.conf import settings
 from .models import DockerContainer, CustomUser
 import logging
 import subprocess
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +133,7 @@ class DockerManager:
                     },
                     detach=True,
                     mem_limit=f"{user.ram_limit}m",
-                    memswap_limit=f"{user.memswap_limit}m",
                     cpu_shares=int(user.cpu_limit * 1024),
-                    storage_opt={"size": f"{user.storage_limit}m"},
                     runtime='nvidia' if user.gpu_access else None
                 )
 
@@ -261,10 +258,7 @@ class DockerManager:
 
         try:
             db_container = DockerContainer.objects.filter(user=user).first()
-            
-            if db_container:
-                db_container.update_activity()
-            
+
             if db_container:
                 try:
                     container = self.client.containers.get(container_name)
@@ -290,28 +284,6 @@ class DockerManager:
         except Exception as e:
             logger.error(f"start_or_resume_container failed: {e}")
             return None, None
-    
-    def cleanup_inactive_containers(self, inactivity_minutes=10):
-        """
-        หยุด container ที่ไม่ active เกินเวลา inactivity_minutes
-        คืน resource โดยการ stop container และ update status ใน DB
-        """
-        threshold_time = timezone.now() - timedelta(minutes=inactivity_minutes)
-        inactive_containers = DockerContainer.objects.filter(last_active__lt=threshold_time, status='running')
-
-        for db_container in inactive_containers:
-            try:
-                container = self.client.containers.get(db_container.container_id)
-                container.stop()
-                db_container.status = 'stopped'
-                db_container.save()
-                logger.info(f"Stopped inactive container {db_container.container_id} for user {db_container.user.username}")
-            except docker.errors.NotFound:
-                logger.warning(f"Container {db_container.container_id} not found during cleanup, deleting DB entry")
-                db_container.delete()
-            except Exception as e:
-                logger.error(f"Failed to stop inactive container {db_container.container_id}: {e}")
-    
 
 
 # Global instance

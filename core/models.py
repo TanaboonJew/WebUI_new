@@ -2,7 +2,6 @@ import os
 from django.db import models
 from users.models import CustomUser
 from os.path import basename
-from django.utils import timezone
 
 def user_directory_path(instance, filename):
     """Returns: user_<ID>_(<USERNAME>)/<type>/<filename>"""
@@ -31,14 +30,13 @@ class DockerContainer(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='building')
     dockerfile = models.FileField(
         upload_to=user_dockerfile_path,
-        null=False,
-        blank=False
+        null=False, ### change this to true when migrate
+        blank=False # this too
     )
     build_logs = models.TextField(blank=True)
     jupyter_token = models.CharField(max_length=50, blank=True)
     jupyter_port = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    last_active = models.DateTimeField(auto_now=True)
     resource_limits = models.JSONField(default=dict)
     image_name = models.CharField(max_length=255, blank=True)
     port_bindings = models.JSONField(default=dict)
@@ -53,10 +51,6 @@ class DockerContainer(models.Model):
             return f"http://localhost:{self.jupyter_port}/?token={self.jupyter_token}"
         return None
 
-    def update_activity(self):
-        self.last_active = timezone.now()
-        self.save(update_fields=['last_active'])
-    
     def __str__(self):
         return f"{self.user.username}'s container ({self.status})"
 
