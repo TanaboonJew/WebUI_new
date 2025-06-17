@@ -149,6 +149,7 @@ function setupWebSocket() {
 
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
+    console.log("WebSocket Data:", data);
     if (data.usages) {
       const tbody = document.getElementById("usage-table-body");
 
