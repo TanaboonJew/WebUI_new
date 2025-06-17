@@ -31,7 +31,7 @@ tr.updated {
       </thead>
       <tbody id="usage-table-body">
         {% for usage in usages %}
-        <tr>
+        <tr id="row-{{ usage.user.username }}">
           <td><strong>{{ usage.user.username }}</strong></td>
           <td>
             {% if usage.docker_status == "running" %}
@@ -71,7 +71,7 @@ tr.updated {
               </div>
             </div>
           </td>
-          <td>{{ usage.updated_at }}</td>
+          <td>{{ usage.updated_at|date:"Y-m-d H:i:s" }}</td>
           <td>
             <a href="{% url 'allocate-resources' usage.user.id %}" class="btn btn-sm btn-primary">
               Allocate Resources
@@ -130,12 +130,6 @@ function createRow(usage) {
       </td>
     </tr>
   `;
-}
-
-function getColorClass(percent) {
-  if (percent > 80) return 'bg-danger';
-  if (percent > 50) return 'bg-warning';
-  return 'bg-success';
 }
 
 function setupWebSocket() {

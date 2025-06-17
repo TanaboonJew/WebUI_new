@@ -38,7 +38,8 @@ class MonitoringConsumer(AsyncWebsocketConsumer):
             'cpu': psutil.cpu_percent(),
             'memory': psutil.virtual_memory().percent,
             'containers': len(client.containers.list()),
-            'active_users': DockerContainer.objects.filter(status='running').count()
+            'active_users': DockerContainer.objects.filter(status='running').count(),
+            'gpu': gpu 
         }
         return stats
 
