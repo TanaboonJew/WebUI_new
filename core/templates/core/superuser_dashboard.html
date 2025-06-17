@@ -58,16 +58,16 @@ tr.updated {
           <td>
             <div class="progress" style="height: 20px;">
               <div class="progress-bar 
-                  {% if usage.gpu_usage > 80 %}
+                  {% if usage.gpu.utilization > 80 %}
                     bg-danger
-                  {% elif usage.gpu_usage > 50 %}
+                  {% elif usage.gpu.utilization > 50 %}
                     bg-warning
                   {% else %}
                     bg-success
                   {% endif %}"
                   role="progressbar"
-                  style="width: {{ usage.gpu_usage }}%;">
-                {{ usage.gpu_usage }}%
+                  style="width: {{ usage.gpu.utilization }}%;">
+                {{ usage.gpu.utilization }}%
               </div>
             </div>
           </td>

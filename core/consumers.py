@@ -34,12 +34,34 @@ class MonitoringConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_system_stats(self):
         client = docker.from_env()
+
+        gpu_data = {
+            'utilization': 0,
+            'memory_percent': 0,
+            'temperature': 0,
+        }
+
+        try:
+            import pynvml
+            pynvml.nvmlInit()
+            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+            util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+            mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+            temp = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+
+            gpu_data['utilization'] = util.gpu
+            gpu_data['memory_percent'] = mem_info.used / mem_info.total * 100 if mem_info.total else 0
+            gpu_data['temperature'] = temp
+
+        except Exception as e:
+            print(f"Error getting GPU stats: {e}")
+
         stats = {
             'cpu': psutil.cpu_percent(),
             'memory': psutil.virtual_memory().percent,
             'containers': len(client.containers.list()),
             'active_users': DockerContainer.objects.filter(status='running').count(),
-            'gpu': gpu 
+            'gpu': gpu_data,
         }
         return stats
 
