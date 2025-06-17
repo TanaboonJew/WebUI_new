@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     # Custom apps
     'users',  # Custom user model
     'core',   # Your main business logic
+    
+    'background_task',
 ]
 
 # === MIDDLEWARE STACK ===
