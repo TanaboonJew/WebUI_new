@@ -135,8 +135,7 @@ class DockerManager:
                     detach=True,
                     mem_limit=f"{user.ram_limit}m",
                     memswap_limit=f"{user.memswap_limit}m",
-                    cpu_period=100000,
-                    cpu_quota=int(user.cpu_limit * 100000),
+                    cpu_shares=int(user.cpu_limit * 1024),
                     storage_opt={"size": f"{user.storage_limit}m"},
                     runtime='nvidia' if user.gpu_access else None
                 )
