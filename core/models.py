@@ -27,6 +27,7 @@ class DockerContainer(models.Model):
     
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='containers')
     container_id = models.CharField(max_length=64, blank=True)
+    can_user_start = models.BooleanField(default=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='building')
     dockerfile = models.FileField(
         upload_to=user_dockerfile_path,

@@ -175,6 +175,7 @@ class DockerManager:
                 container.start()
                 if db_container:
                     db_container.status = 'running'
+                    db_container.can_user_start = True
                     db_container.save()
                 logger.info(f"Started container {container_name}")
 
@@ -182,6 +183,7 @@ class DockerManager:
                 container.stop()
                 if db_container:
                     db_container.status = 'stopped'
+                    db_container.can_user_start = not by_admin
                     db_container.save()
                 logger.info(f"Stopped container {container_name}")
 
@@ -190,20 +192,6 @@ class DockerManager:
                 if db_container:
                     db_container.delete()
                 logger.info(f"Deleted container {container_name}")
-                
-            elif action == 'pause':
-                container.pause()
-                if db_container:
-                    db_container.status = 'paused'
-                    db_container.save()
-                logger.info(f"Paused container {container_name}")
-                
-            elif action == 'unpause':
-                container.unpause()
-                if db_container:
-                    db_container.status = 'running'
-                    db_container.save()
-                logger.info(f"Resumed container {container_name}")
 
             else:
                 logger.warning(f"Invalid action: {action}")

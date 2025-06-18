@@ -12,6 +12,7 @@ from collections import defaultdict
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.contrib.admin.views.decorators import staff_member_required
 import os
 
 def home(request):
@@ -117,6 +118,11 @@ def file_manager(request):
 @login_required
 def start_container_view(request):
     user = request.user
+    container = DockerContainer.objects.filter(user=user).last()
+    if container and not container.can_user_start:
+        messages.error(request, "Admin has disabled your ability to start the container.")
+        return redirect('docker-management')
+
     success = docker_manager.manage_container(user, action='start', container_type='jupyter')
     if success:
         messages.success(request, "Container started successfully.")
@@ -587,22 +593,29 @@ def allocate_resources(request, user_id):
 
     return render(request, 'core/allocate_resources.html', {'user_obj': user})
 
-@require_POST
-@login_required
-def freeze_container(request, user_id):
-    try:
-        user = CustomUser.objects.get(id=user_id)
-        success = docker_manager.manage_container(user, action='pause', container_type='jupyter')
-        return JsonResponse({'success': success})
-    except CustomUser.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
-    
-@require_POST
-@login_required
-def resume_container(request, user_id):
-    try:
-        user = CustomUser.objects.get(id=user_id)
-        success = docker_manager.manage_container(user, action='unpause', container_type='jupyter')
-        return JsonResponse({'success': success})
-    except CustomUser.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+@staff_member_required
+def admin_start_container_view(request, container_id):
+    container = get_object_or_404(DockerContainer, id=container_id)
+    success = docker_manager.manage_container(container.user, action='start', container_type='jupyter')
+    if success:
+        container.status = 'running'
+        container.can_user_start = True
+        container.save()
+        messages.success(request, "Started container.")
+    else:
+        messages.error(request, "Failed to start container.")
+    return redirect('admin-docker-management')
+
+
+@staff_member_required
+def admin_stop_container_view(request, container_id):
+    container = get_object_or_404(DockerContainer, id=container_id)
+    success = docker_manager.manage_container(container.user, action='stop', container_type='jupyter', by_admin=True)
+    if success:
+        container.status = 'stopped'
+        container.can_user_start = False
+        container.save()
+        messages.success(request, "Stopped container.")
+    else:
+        messages.error(request, "Failed to stop container.")
+    return redirect('admin-docker-management')

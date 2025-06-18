@@ -79,17 +79,19 @@ tr.updated {
             </a>
           </td>
           <td>
-            {% if usage.docker_status == "paused" %}
-              <button class="btn btn-sm btn-success ms-1" onclick="resumeContainer('{{ usage.user.id }}')">
-                Resume
-              </button>
-            {% elif usage.docker_status == "running" %}
-              <button class="btn btn-sm btn-warning ms-1" onclick="freezeContainer('{{ usage.user.id }}')">
-                Freeze
-              </button>
-            {% else %}
+            {% if request.user.is_superuser %}
+              {% if usage.docker_status == "running" %}
+                  <button class="btn btn-sm btn-danger ms-1" onclick="stopContainer('{{ usage.user.id }}')">
+                      Stop
+                  </button>
+              {% else %}
+                  <button class="btn btn-sm btn-success ms-1" onclick="startContainer('{{ usage.user.id }}')">
+                      Start
+                  </button>
+              {% endif %}
+          {% else %}
               <span class="text-muted">N/A</span>
-            {% endif %}
+          {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -99,51 +101,40 @@ tr.updated {
 </div>
 
 <script>
-function getColorClass(percent) {
-  if (percent > 80) return 'bg-danger';
-  if (percent > 50) return 'bg-warning';
-  return 'bg-success';
+function startContainer(userId) {
+  fetch(`/admin/docker/start/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert('Started container successfully');
+      location.reload();
+    } else {
+      alert('Failed to start container');
+    }
+  })
+  .catch(() => alert('Error starting container'));
 }
 
-function createRow(usage) {
-  return `
-    <tr id="row-${usage.username}">
-      <td><strong>${usage.username}</strong></td>
-      <td>
-        <span class="badge ${usage.docker_status === 'running' ? 'bg-success' : 'bg-danger'}">
-          ${usage.docker_status}
-        </span>
-      </td>
-      <td>
-        <span class="badge ${usage.jupyter_status === 'running' ? 'bg-success' : 'bg-danger'}">
-          ${usage.jupyter_status}
-        </span>
-      </td>
-      <td>${usage.disk_usage}</td>
-      <td>
-        <div class="progress" style="height: 20px;">
-          <div class="progress-bar ${getColorClass(usage.cpu_usage)}" 
-               style="width: ${usage.cpu_usage}%;"
-               role="progressbar" aria-valuenow="${usage.cpu_usage}" aria-valuemin="0" aria-valuemax="100">
-            ${usage.cpu_usage}%
-          </div>
-        </div>
-      </td>
-      <td>
-        <div class="progress" style="height: 20px;">
-          <div class="progress-bar ${getColorClass(usage.gpu_usage)}" 
-               style="width: ${usage.gpu_usage}%;"
-               role="progressbar" aria-valuenow="${usage.gpu_usage}" aria-valuemin="0" aria-valuemax="100">
-            ${usage.gpu_usage}%
-          </div>
-        </div>
-      </td>
-      <td>${usage.updated_at}</td>
-      <td>
-        <a href="/allocate/${usage.id}/" class="btn btn-sm btn-primary">Allocate Resources</a>
-      </td>
-    </tr>
-  `;
+function stopContainer(userId) {
+  fetch(`/admin/docker/stop/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert('Stopped container successfully');
+      location.reload();
+    } else {
+      alert('Failed to stop container');
+    }
+  })
+  .catch(() => alert('Error stopping container'));
 }
 
 function setupWebSocket() {
@@ -199,67 +190,20 @@ document.addEventListener("DOMContentLoaded", function() {
   setupWebSocket();
 });
 
-// pause Container
-function freezeContainer(userId) {
-  if (!confirm("Are you sure you want to freeze this container?")) return;
-
-  fetch(`/containers/freeze/${userId}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCookie('csrftoken'),
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      alert("Container frozen successfully.");
-    } else {
-      alert("Failed to freeze container.");
-    }
-  })
-  .catch(error => {
-    console.error("Error freezing container:", error);
-    alert("Error freezing container.");
-  });
-}
-
+// ฟังก์ชันช่วยดึง CSRF token จาก cookie
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
     const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + '=')) {
         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
         break;
       }
     }
   }
   return cookieValue;
-}
-
-// Resume Container
-function resumeContainer(userId) {
-  if (!confirm("Resume this container?")) return;
-
-  fetch(`/containers/resume/${userId}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCookie('csrftoken'),
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      alert("Container resumed.");
-    } else {
-      alert("Failed to resume container.");
-    }
-  })
-  .catch(error => {
-    console.error("Error resuming container:", error);
-    alert("Error resuming container.");
-  });
 }
 
 </script>
