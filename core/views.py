@@ -567,13 +567,13 @@ def allocate_resources(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
 
     if request.method == 'POST':
-        ram_limit = request.POST.get('ram_limit')
+        mem_limit = request.POST.get('mem_limit')
         storage_limit = request.POST.get('storage_limit')
         cpu_limit = request.POST.get('cpu_limit')
         gpu_access = request.POST.get('gpu_access') == 'on'
 
         try:
-            user.ram_limit = int(ram_limit)
+            user.mem_limit = int(mem_limit)
             user.storage_limit = int(storage_limit)
             user.cpu_limit = int(cpu_limit)
             user.gpu_access = gpu_access

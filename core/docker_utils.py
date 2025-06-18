@@ -132,7 +132,8 @@ class DockerManager:
                         'GRANT_SUDO': 'yes'
                     },
                     detach=True,
-                    mem_limit=f"{user.ram_limit}m",
+                    mem_limit=f"{user.mem_limit}m",
+                    memswap_limit=f"{user.memswap_limit}m",
                     cpu_shares=int(user.cpu_limit * 1024),
                     runtime='nvidia' if user.gpu_access else None
                 )
@@ -147,7 +148,7 @@ class DockerManager:
                         'jupyter_port': port,
                         'resource_limits': {
                             'cpu': user.cpu_limit,
-                            'ram': user.ram_limit,
+                            'ram': user.mem_limit,
                             'gpu': user.gpu_access
                         }
                     }
