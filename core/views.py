@@ -596,3 +596,13 @@ def freeze_container(request, user_id):
         return JsonResponse({'success': success})
     except CustomUser.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    
+@require_POST
+@login_required
+def resume_container(request, user_id):
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        success = docker_manager.manage_container(user, action='unpause', container_type='jupyter')
+        return JsonResponse({'success': success})
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)

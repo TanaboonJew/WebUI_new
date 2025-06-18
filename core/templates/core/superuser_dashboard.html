@@ -79,9 +79,17 @@ tr.updated {
             </a>
           </td>
           <td>
-            <button class="btn btn-sm btn-warning ms-1" onclick="freezeContainer('{{ usage.user.id }}')">
-              Freeze
-            </button>
+            {% if usage.docker_status == "paused" %}
+              <button class="btn btn-sm btn-success ms-1" onclick="resumeContainer('{{ usage.user.id }}')">
+                Resume
+              </button>
+            {% elif usage.docker_status == "running" %}
+              <button class="btn btn-sm btn-warning ms-1" onclick="freezeContainer('{{ usage.user.id }}')">
+                Freeze
+              </button>
+            {% else %}
+              <span class="text-muted">N/A</span>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -228,6 +236,30 @@ function getCookie(name) {
     }
   }
   return cookieValue;
+}
+
+// Resume Container
+function resumeContainer(userId) {
+  if (!confirm("Resume this container?")) return;
+
+  fetch(`/containers/resume/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert("Container resumed.");
+    } else {
+      alert("Failed to resume container.");
+    }
+  })
+  .catch(error => {
+    console.error("Error resuming container:", error);
+    alert("Error resuming container.");
+  });
 }
 
 </script>

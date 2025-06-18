@@ -197,6 +197,13 @@ class DockerManager:
                     db_container.status = 'paused'
                     db_container.save()
                 logger.info(f"Paused container {container_name}")
+                
+            elif action == 'unpause':
+                container.unpause()
+                if db_container:
+                    db_container.status = 'running'
+                    db_container.save()
+                logger.info(f"Resumed container {container_name}")
 
             else:
                 logger.warning(f"Invalid action: {action}")
