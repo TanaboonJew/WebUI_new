@@ -586,3 +586,13 @@ def allocate_resources(request, user_id):
             })
 
     return render(request, 'core/allocate_resources.html', {'user_obj': user})
+
+@require_POST
+@login_required
+def freeze_container(request, user_id):
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        success = docker_manager.manage_container(user, action='pause', container_type='jupyter')
+        return JsonResponse({'success': success})
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)

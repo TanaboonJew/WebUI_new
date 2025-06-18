@@ -190,6 +190,13 @@ class DockerManager:
                 if db_container:
                     db_container.delete()
                 logger.info(f"Deleted container {container_name}")
+                
+            elif action == 'pause':
+                container.pause()
+                if db_container:
+                    db_container.status = 'paused'
+                    db_container.save()
+                logger.info(f"Paused container {container_name}")
 
             else:
                 logger.warning(f"Invalid action: {action}")

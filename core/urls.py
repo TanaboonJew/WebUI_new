@@ -20,4 +20,5 @@ urlpatterns = [
     path('approve-users/', views.approve_users, name='approve_users'),
     path('request-role/', views.request_role_verification, name='request_role_verification'),
     path('allocate/<int:user_id>/', views.allocate_resources, name='allocate-resources'),
+    path('containers/freeze/<int:user_id>/', views.freeze_container, name='freeze-container'),
 ]

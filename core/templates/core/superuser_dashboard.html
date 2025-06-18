@@ -27,6 +27,7 @@ tr.updated {
           <th>GPU (%)</th>
           <th>Last Updated</th>
           <th>Actions</th>
+          <th>Pause</th>
         </tr>
       </thead>
       <tbody id="usage-table-body">
@@ -76,6 +77,11 @@ tr.updated {
             <a href="{% url 'allocate-resources' usage.user.id %}" class="btn btn-sm btn-primary">
               Allocate Resources
             </a>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-warning ms-1" onclick="freezeContainer('{{ usage.user.id }}')">
+              Freeze
+            </button>
           </td>
         </tr>
         {% endfor %}
@@ -184,5 +190,45 @@ function setupWebSocket() {
 document.addEventListener("DOMContentLoaded", function() {
   setupWebSocket();
 });
+
+// pause Container
+function freezeContainer(userId) {
+  if (!confirm("Are you sure you want to freeze this container?")) return;
+
+  fetch(`/containers/freeze/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert("Container frozen successfully.");
+    } else {
+      alert("Failed to freeze container.");
+    }
+  })
+  .catch(error => {
+    console.error("Error freezing container:", error);
+    alert("Error freezing container.");
+  });
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
 </script>
 {% endblock %}
