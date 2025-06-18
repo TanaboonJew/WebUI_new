@@ -3,7 +3,27 @@
 {% block content %}
 <div class="container mt-4">
     <h2>AI Development Environment</h2>
-    
+
+    {% if container %}
+        <div class="alert 
+            {% if container.status == 'running' %}
+                alert-success
+            {% elif container.status == 'paused' %}
+                alert-warning
+            {% elif container.status == 'stopped' %}
+                alert-secondary
+            {% else %}
+                alert-danger
+            {% endif %}
+            mt-3">
+            <strong>Container Status:</strong> {{ container.status|capfirst }}
+
+            {% if container.status == 'paused' %}
+            <span class="ms-2 text-danger fw-bold">(Frozen by Admin. You cannot resume.)</span>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <div class="row">
         <!-- Jupyter Notebook Section -->
         <div class="col-md-6">
@@ -28,18 +48,24 @@
    
                     <form method="post" class="d-inline">
                         {% csrf_token %}
-                        {% if container.status == 'stopped' %}    
+                        {% if container.status == 'paused' %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-pause"></i> Frozen by Admin
+                            </button>
+                        {% elif container.status == 'stopped' %}    
                             <button type="submit" name="start_jupyter" class="btn btn-success">
-                                <i class="fas fa-stop"></i> Start Notebook
+                                <i class="fas fa-play"></i> Start Notebook
                             </button>   
                         {% elif container.status == 'running' %}
                             <button type="submit" name="stop_jupyter" class="btn btn-danger">
                                 <i class="fas fa-stop"></i> Stop Notebook
                             </button>
                         {% endif %}
-                        <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
-                            <i class="fas fa-trash"></i> Delete Notebook
-                        </button>
+                        {% if container.status != 'paused' %}
+                            <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
+                                <i class="fas fa-trash"></i> Delete Notebook
+                            </button>
+                        {% endif %}
                     </form>
 
                     {% elif container.status == 'running' %}
