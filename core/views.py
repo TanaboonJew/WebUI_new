@@ -244,7 +244,7 @@ def ai_dashboard(request):
                 framework = 'tensorflow'
 
             image_map = {
-                'tensorflow': 'my-tf',
+                'tensorflow': 'my-tf-19',
                 'pytorch': 'my-torch',
             }
 
