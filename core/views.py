@@ -492,10 +492,11 @@ def superuser_dashboard(request):
             'user': user,
             'docker_status': docker_status,
             'jupyter_status': jupyter_status,
-            'disk_usage': 10,  # จำลองไว้ก่อน
+            'disk_usage': 10,
             'cpu_usage': cpu_usage,
             'gpu_usage': gpu_usage,
-            'updated_at': timezone.now()
+            'updated_at': timezone.now(),
+            'container': container,
         }
         usages.append(usage)
 

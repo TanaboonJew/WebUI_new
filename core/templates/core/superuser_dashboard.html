@@ -79,7 +79,7 @@ tr.updated {
             </a>
           </td>
           <td>
-            {% if request.user.is_superuser %}
+            {% if request.user.is_superuser and usage.container %}
               {% if usage.docker_status == "running" %}
                 <form method="post" action="{% url 'admin-stop-container' usage.container.id %}" style="display:inline;">
                   {% csrf_token %}
