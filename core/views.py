@@ -604,7 +604,9 @@ def allocate_resources(request, user_id):
 
     return render(request, 'core/allocate_resources.html', {'user_obj': user})
 
+@login_required
 @user_passes_test(lambda u: u.is_superuser)
+@require_POST
 def admin_start_container_view(request, container_id):
     container = get_object_or_404(DockerContainer, id=container_id)
     success = docker_manager.manage_container(container.user, action='start', container_type='jupyter')
@@ -618,7 +620,9 @@ def admin_start_container_view(request, container_id):
     return redirect('admin-docker-management')
 
 
+@login_required
 @user_passes_test(lambda u: u.is_superuser)
+@require_POST
 def admin_stop_container_view(request, container_id):
     container = get_object_or_404(DockerContainer, id=container_id)
     success = docker_manager.manage_container(container.user, action='stop', container_type='jupyter', by_admin=True)

@@ -81,13 +81,19 @@ tr.updated {
           <td>
             {% if request.user.is_superuser %}
               {% if usage.docker_status == "running" %}
-                <button class="btn btn-sm btn-danger ms-1" onclick="stopContainer('{{ usage.container.id }}')">
-                  Pause
-                </button>
+                <form method="post" action="{% url 'admin-stop-container' usage.container.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-danger ms-1" onclick="return confirm('Confirm pause this container?');">
+                    Pause
+                  </button>
+                </form>
               {% else %}
-                <button class="btn btn-sm btn-success ms-1" onclick="startContainer('{{ usage.container.id }}')">
-                  Continue
-                </button>
+                <form method="post" action="{% url 'admin-start-container' usage.container.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-success ms-1" onclick="return confirm('Confirm continue this container?');">
+                    Continue
+                  </button>
+                </form>
               {% endif %}
             {% else %}
               <span class="text-muted">N/A</span>
