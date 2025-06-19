@@ -20,7 +20,7 @@ urlpatterns = [
     path('approve-users/', views.approve_users, name='approve_users'),
     path('request-role/', views.request_role_verification, name='request_role_verification'),
     path('allocate/<int:user_id>/', views.allocate_resources, name='allocate-resources'),
-    path('admin/docker/start/<int:container_id>/', views.admin_start_container_view, name='admin-start-container'),
-    path('admin/docker/stop/<int:container_id>/', views.admin_stop_container_view, name='admin-stop-container'),
+    path('manage/docker/start/<int:container_id>/', views.admin_start_container_view, name='admin-start-container'),
+    path('manage/docker/stop/<int:container_id>/', views.admin_stop_container_view, name='admin-stop-container'),
 
 ]
