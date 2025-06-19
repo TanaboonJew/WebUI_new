@@ -3,7 +3,6 @@ import docker
 from docker.errors import DockerException
 import subprocess
 from .models import DockerContainer
-import pynvml
 import os
 
 try:
@@ -71,10 +70,14 @@ def get_user_container_stats(container_id):
         return None
 
     try:
+        # Get the container model instance
         container = DockerContainer.objects.get(container_id=container_id)
+        # Get user who owns this container
+        user = getattr(container, 'active_user', None)
+
         docker_container = docker_client.containers.get(container_id)
 
-        # Get basic stats
+        # Get container stats from Docker API
         stats = docker_container.stats(stream=False)
         cpu_stats = stats['cpu_stats']
         precpu_stats = stats['precpu_stats']
@@ -89,7 +92,11 @@ def get_user_container_stats(container_id):
             system_delta = system_cpu_current - system_cpu_previous
             cpu_percent = (cpu_delta / system_delta) * 100 if system_delta > 0 else 0
 
-        # ✅ GPU memory usage per container (MB)
+        # Normalize CPU percent by user cpu_limit if available
+        if user and user.cpu_limit > 0:
+            cpu_percent = cpu_percent / user.cpu_limit
+
+        # Calculate GPU memory usage per container (MB)
         gpu_memory_mb = 0
         try:
             inspect = docker_container.attrs
@@ -99,7 +106,8 @@ def get_user_container_stats(container_id):
                 pids = [pid_host]
                 try:
                     children_output = os.popen(f"cat /proc/{pid_host}/task/{pid_host}/children").read()
-                    pids += [int(pid) for pid in children_output.strip().split()] if children_output.strip() else []
+                    if children_output.strip():
+                        pids += [int(pid) for pid in children_output.strip().split()]
                 except Exception as e:
                     print(f"[PID] Error reading children: {e}")
 
@@ -115,7 +123,7 @@ def get_user_container_stats(container_id):
             for proc in processes:
                 if proc.pid in pids:
                     used_memory = getattr(proc, 'usedGpuMemory', 0)
-                    gpu_memory_mb += used_memory // (1024 * 1024)  # Convert to MB
+                    gpu_memory_mb += used_memory // (1024 * 1024)  # Bytes to MB
 
             pynvml.nvmlShutdown()
 
