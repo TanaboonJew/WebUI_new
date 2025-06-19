@@ -131,7 +131,7 @@ class DockerManager:
                         'JUPYTER_TOKEN': token,
                         'GRANT_SUDO': 'yes'
                     },
-                    command="jupyter notebook --NotebookApp.notebook_dir='/home/user' --ip=0.0.0.0 --port=8888 --no-browser"
+                    command="jupyter notebook --NotebookApp.notebook_dir='/home/user' --ip=0.0.0.0 --port=8888 --no-browser",
                     detach=True,
                     mem_limit=f"{user.mem_limit}m",
                     memswap_limit=f"{user.memswap_limit}m",
