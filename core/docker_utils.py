@@ -163,7 +163,7 @@ class DockerManager:
             logger.error(f"Container creation failed: {e}")
             return None, None
 
-    def manage_container(self, user: CustomUser, action: str, container_type: str = 'default') -> bool:
+    def manage_container(self, user: CustomUser, action: str, container_type: str = 'default', by_admin: bool = False) -> bool:
         if not self.client:
             return False
         container_name = f"{container_type}_{user.id}_{user.username}"
