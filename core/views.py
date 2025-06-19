@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.http import require_POST
 import os
 
 def home(request):
