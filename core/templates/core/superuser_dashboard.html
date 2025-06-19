@@ -101,7 +101,7 @@ tr.updated {
 </div>
 
 <script>
-function startContainer(userId) {
+function startContainer(containerId) {
   fetch(`/admin/docker/start/${containerId}/`, {
     method: 'POST',
     headers: {
