@@ -200,11 +200,10 @@ class DockerManager:
             return True
 
         except docker.errors.NotFound:
-            logger.warning(f"Container {container_name} not found.")
             DockerContainer.objects.filter(user=user).delete()
             return False
         except Exception as e:
-            logger.error(f"Container {action} failed: {e}")
+            logger.error(f"[{action.upper()}] Container error for {user.username}: {e}")
             return False
 
     def get_container_stats(self, container_id: str) -> Optional[Dict]:
