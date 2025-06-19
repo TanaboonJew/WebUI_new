@@ -119,7 +119,8 @@ function startContainer(userId) {
   .catch(() => alert('Error starting container'));
 }
 
-function stopContainer(userId) {
+function stopContainer(containerId) {
+  console.log("stopContainer called with containerId:", containerId);
   fetch(`/admin/docker/stop/${containerId}/`, {
     method: 'POST',
     headers: {
