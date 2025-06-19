@@ -582,14 +582,12 @@ def allocate_resources(request, user_id):
     if request.method == 'POST':
         mem_limit = request.POST.get('mem_limit')
         memswap_limit = request.POST.get('memswap_limit')
-        storage_limit = request.POST.get('storage_limit')
         cpu_limit = request.POST.get('cpu_limit')
         gpu_access = request.POST.get('gpu_access') == 'on'
 
         try:
             user.mem_limit = int(mem_limit)
             user.memswap_limit = int(memswap_limit)
-            user.storage_limit = int(storage_limit)
             user.cpu_limit = int(cpu_limit)
             user.gpu_access = gpu_access
             user.save()
