@@ -16,4 +16,4 @@ class CustomUserCreationForm(UserCreationForm):
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'mem_limit', 'storage_limit', 'cpu_limit', 'gpu_access')
+        fields = ('username', 'email', 'intended_role', 'role_verified', 'mem_limit', 'memswap_limit', 'storage_limit', 'cpu_limit', 'gpu_access')

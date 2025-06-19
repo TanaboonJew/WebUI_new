@@ -81,17 +81,17 @@ tr.updated {
           <td>
             {% if request.user.is_superuser %}
               {% if usage.docker_status == "running" %}
-                  <button class="btn btn-sm btn-danger ms-1" onclick="stopContainer('{{ usage.user.id }}')">
-                      Stop
-                  </button>
+                <button class="btn btn-sm btn-danger ms-1" onclick="stopContainer('{{ usage.container.id }}')">
+                  Stop
+                </button>
               {% else %}
-                  <button class="btn btn-sm btn-success ms-1" onclick="startContainer('{{ usage.user.id }}')">
-                      Start
-                  </button>
+                <button class="btn btn-sm btn-success ms-1" onclick="startContainer('{{ usage.container.id }}')">
+                  Start
+                </button>
               {% endif %}
-          {% else %}
+            {% else %}
               <span class="text-muted">N/A</span>
-          {% endif %}
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -102,7 +102,7 @@ tr.updated {
 
 <script>
 function startContainer(userId) {
-  fetch(`/admin/docker/start/${userId}/`, {
+  fetch(`/admin/docker/start/${containerId}/`, {
     method: 'POST',
     headers: {
       'X-CSRFToken': getCookie('csrftoken'),
@@ -120,7 +120,7 @@ function startContainer(userId) {
 }
 
 function stopContainer(userId) {
-  fetch(`/admin/docker/stop/${userId}/`, {
+  fetch(`/admin/docker/stop/${containerId}/`, {
     method: 'POST',
     headers: {
       'X-CSRFToken': getCookie('csrftoken'),
