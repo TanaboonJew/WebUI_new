@@ -206,13 +206,19 @@ def public_dashboard(request):
 
 @login_required
 def private_dashboard(request):
-    """Private user-specific monitoring dashboard"""
     system_stats = get_system_stats()
     container_stats = None
     
     container = DockerContainer.objects.filter(user=request.user).first()
     if container:
-        container_stats = docker_manager.get_container_stats(container.container_id)
+        container_stats = get_user_container_stats(container.container_id)
+        
+        # Normalize CPU percent by user's cpu_limit if available
+        if container_stats and container_stats.get('cpu_percent') is not None:
+            cpu_raw = container_stats['cpu_percent']
+            user_cpu_limit = getattr(request.user, 'cpu_limit', 1)
+            if user_cpu_limit > 0:
+                container_stats['cpu_percent'] = round(cpu_raw / user_cpu_limit, 2)
     
     return render(request, 'core/private_dashboard.html', {
         'system_stats': system_stats,

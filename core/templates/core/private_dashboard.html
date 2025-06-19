@@ -8,7 +8,6 @@
     <h2>Private Monitoring Dashboard</h2>
     <p class="text-muted">Welcome, {{ user.username }}</p>
     
-    
     {% if container %}
     <div class="card mt-4">
         <div class="card-header bg-secondary text-white d-flex justify-content-between">
@@ -32,7 +31,7 @@
                     <h5>Memory Usage</h5>
                     <div class="progress">
                         <div id="memory-progress" class="progress-bar" role="progressbar" 
-                             style="width: {{ container_stats.memory_percent|default:0 }}%">
+                             style="width: {{ container_stats.memory_usage|divisibleby:container_stats.memory_limit|floatformat:2|default:0 }}%">
                             <span id="memory-text">
                                 {{ container_stats.memory_usage|filesizeformat }} / {{ container_stats.memory_limit|filesizeformat }}
                             </span>
@@ -75,7 +74,7 @@
 </div>
 
 <script>
-// System-wide monitoring
+// System-wide monitoring socket
 const systemSocket = new WebSocket(
     'ws://' + window.location.host + '/ws/monitoring/'
 );
@@ -89,7 +88,7 @@ systemSocket.onmessage = function(e) {
     document.querySelector('#gpu-memory').style.width = data.gpu_mem + '%';
 };
 
-// Container-specific monitoring
+// Container-specific monitoring socket
 {% if container %}
 const containerSocket = new WebSocket(
     'ws://' + window.location.host + '/ws/container/{{ container.container_id }}/'
@@ -125,4 +124,5 @@ containerSocket.onmessage = function(e) {
 };
 {% endif %}
 </script>
+
 {% endblock %}
