@@ -1,12 +1,11 @@
 # Dockerfile.tensorflow
-FROM tensorflow/tensorflow:2.16.1-devel-gpu  # Pin a version!
+FROM tensorflow/tensorflow:2.19.0-gpu-jupyter
 
-RUN pip install --upgrade pip && \
-    pip install jupyterlab matplotlib pandas scikit-learn
+RUN apt-get update && apt-get install -y git curl
+
+RUN pip install matplotlib pandas scikit-learn
 
 EXPOSE 8888
-
-CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''"]
 
 # Dockerfile.pytorch
 FROM nvidia/cuda:12.5.1-cudnn-devel-ubuntu22.04
