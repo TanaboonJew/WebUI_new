@@ -619,7 +619,7 @@ def admin_start_container_view(request, container_id):
         messages.success(request, "Started container.")
     else:
         messages.error(request, "Failed to start container.")
-    return redirect('admin-docker-management')
+    return redirect('docker-management')
 
 
 @login_required
@@ -635,4 +635,4 @@ def admin_stop_container_view(request, container_id):
         messages.success(request, "Stopped container.")
     else:
         messages.error(request, "Failed to stop container.")
-    return redirect('admin-docker-management')
+    return redirect('docker-management')
