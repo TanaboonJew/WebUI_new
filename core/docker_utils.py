@@ -154,7 +154,7 @@ class DockerManager:
                     }
                 )
 
-                return f"http://{settings.SERVER_IP}:{port}/?token={token}", token
+                return f"http://{settings.SERVER_IP}:{port}/tree/home/user?token={token}", token
 
             else:
                 pass  # สำหรับ container ประเภทอื่น
