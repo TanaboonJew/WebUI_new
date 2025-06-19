@@ -580,10 +580,12 @@ def allocate_resources(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
 
     if request.method == 'POST':
+        print("POST data:", request.POST)
         mem_limit = request.POST.get('mem_limit')
         memswap_limit = request.POST.get('memswap_limit')
         cpu_limit = request.POST.get('cpu_limit')
         gpu_access = request.POST.get('gpu_access') == 'on'
+        print(mem_limit, memswap_limit, cpu_limit, gpu_access)
 
         try:
             user.mem_limit = int(mem_limit)
@@ -591,8 +593,10 @@ def allocate_resources(request, user_id):
             user.cpu_limit = int(cpu_limit)
             user.gpu_access = gpu_access
             user.save()
+            print("Saved successfully")
             return redirect('superuser-dashboard')
-        except ValueError:
+        except ValueError as e:
+            print("ValueError:", e)
             return render(request, 'core/allocate_resources.html', {
                 'user_obj': user,
                 'error': 'Invalid input. Please enter numbers only.'
