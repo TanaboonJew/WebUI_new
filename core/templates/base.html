@@ -25,8 +25,8 @@
                     
                     <!-- Authenticated user links -->
                     {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="dropdown-item" href="{% url 'private-monitoring' %}">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'private-monitoring' %}">
                              <i class="fas fa-chart-line me-1"></i> Container Stats
                         </a>
                     </li>
