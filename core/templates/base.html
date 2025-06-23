@@ -26,9 +26,6 @@
                     <!-- Authenticated user links -->
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-server me-1"></i> Containers
-                        </a>
                         <a class="dropdown-item" href="{% url 'private-monitoring' %}">
                              <i class="fas fa-chart-line me-1"></i> Container Stats
                         </a>
