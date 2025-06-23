@@ -544,9 +544,11 @@ def api_usage_data(request):
 
     return JsonResponse({'usages': usage_list})
 
-@user_passes_test(lambda u: u.is_superuser)
 @login_required
 def approve_users(request):
+    if not request.user.is_superuser:
+        return redirect('home')
+    
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         action = request.POST.get('action')
@@ -568,9 +570,11 @@ def approve_users(request):
     pending_users = CustomUser.objects.filter(intended_role__isnull=False)
     return render(request, 'core/approve_users.html', {'pending_users': pending_users})
 
-@user_passes_test(lambda u: u.is_superuser)
 @login_required
 def request_role_verification(request):
+    if not request.user.is_superuser:
+        return redirect('home')
+    
     if request.method == 'POST':
         role = request.POST.get('intended_role')
         
