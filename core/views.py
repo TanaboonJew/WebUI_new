@@ -14,6 +14,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
+from .decorators import role_verified_required
 import os
 
 def home(request):
@@ -95,7 +96,7 @@ def docker_management(request):
     })
 
     
-
+@role_verified_required
 @login_required
 def file_manager(request):
     files = UserFile.objects.filter(user=request.user)
@@ -115,7 +116,7 @@ def file_manager(request):
         'files': files,
     })
 
-
+@role_verified_required
 @login_required
 def start_container_view(request):
     user = request.user
@@ -131,7 +132,7 @@ def start_container_view(request):
         messages.error(request, "Failed to start container.")
     return redirect('docker-management')
 
-
+@role_verified_required
 @login_required
 def stop_container_view(request):
     user = request.user
@@ -142,6 +143,7 @@ def stop_container_view(request):
         messages.warning(request, "Could not stop container.")
     return redirect('docker-management')
 
+@role_verified_required
 @login_required
 def delete_container_view(request):
     if request.method == 'POST':
@@ -152,7 +154,7 @@ def delete_container_view(request):
             messages.error(request, "Failed to delete container.")
     return redirect('docker-management')
 
-
+@role_verified_required
 @login_required
 def download_file(request, file_id):
     try:
@@ -166,7 +168,7 @@ def download_file(request, file_id):
         messages.error(request, "File not found")
         return redirect('file-manager')
 
-
+@role_verified_required
 @login_required
 def delete_file(request, file_id):
     try:
@@ -228,6 +230,7 @@ def private_dashboard(request):
         'container': container
     })
 
+@role_verified_required
 @login_required
 def ai_dashboard(request):
     models = AIModel.objects.filter(user=request.user)
@@ -335,7 +338,7 @@ def ai_dashboard(request):
         'container': user_container,
     })
 
-
+@role_verified_required
 @login_required
 def delete_model(request, model_id):
     try:
@@ -346,7 +349,7 @@ def delete_model(request, model_id):
         messages.error(request, "Model not found")
     return redirect('ai-dashboard')
 
-
+@role_verified_required
 @login_required
 def build_container(request):
     if request.method == 'POST':
@@ -541,6 +544,7 @@ def api_usage_data(request):
 
     return JsonResponse({'usages': usage_list})
 
+@user_passes_test(lambda u: u.is_superuser)
 @login_required
 def approve_users(request):
     if request.method == 'POST':
@@ -553,7 +557,7 @@ def approve_users(request):
                 user.role_verified = True
                 user.intended_role = None
             elif action == 'deny':
-                user.role = 'bachelor'
+                user.role = 'None'
                 user.role_verified = False
                 user.intended_role = None
             user.save()
@@ -564,14 +568,22 @@ def approve_users(request):
     pending_users = CustomUser.objects.filter(intended_role__isnull=False)
     return render(request, 'core/approve_users.html', {'pending_users': pending_users})
 
+@user_passes_test(lambda u: u.is_superuser)
 @login_required
 def request_role_verification(request):
     if request.method == 'POST':
         role = request.POST.get('intended_role')
+        
+        valid_roles = [choice[0] for choice in CustomUser.ROLE_CHOICES if choice[0] != 'none']
+        if role not in valid_roles:
+            messages.error(request, "บทบาทที่ขอไม่ถูกต้อง")
+            return redirect('home')
+        
         user = request.user
         user.intended_role = role
         user.role_verified = False  # not verified until approved again
         user.save()
+        messages.success(request, "ส่งคำขอยืนยันตัวตนสำเร็จ")
     return redirect('home')
 
 @login_required

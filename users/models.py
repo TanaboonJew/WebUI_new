@@ -3,13 +3,14 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = [
+        ('None', "ยังไม่ได้ยืนยันตัวตน"),
         ('bachelor', "ปริญญาตรี"),
         ('master', "ปริญญาโท"),
         ('doctoral', "ปริญญาเอก"),
         ('teacher', "อาจารย์"),
     ]
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='bachelor')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='None')
     intended_role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True, blank=True)
     role_verified = models.BooleanField(default=False)
 

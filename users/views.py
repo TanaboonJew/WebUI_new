@@ -8,7 +8,7 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.role = 'bachelor'
+            user.role = 'None'
             user.role_verified = False 
             user.save()
 
