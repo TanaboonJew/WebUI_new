@@ -40,22 +40,20 @@
                 </ul>
                 
                 <ul class="navbar-nav">
+                    {% if user.is_superuser %}
+                        <a class="nav-link" href="{% url 'superuser-dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="{% url 'approve_users' %}">
+                            <i class="fas fa-user-check"></i> Verify
+                        </a>
+                    {% endif %}
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-circle me-1"></i> {{ user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            {% if user.is_superuser %}
-                                <li><a class="dropdown-item" href="{% url 'superuser-dashboard' %}">
-                                    Admin Dashboard
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'approve_users' %}">
-                                    Admin Verify
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                            {% endif %}
                             {% if user.is_superuser %}
                                 <li><a class="dropdown-item" href="#">
                                 <i class="fas fa-user me-1"></i> Admin
