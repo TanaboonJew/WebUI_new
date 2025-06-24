@@ -134,7 +134,7 @@ class DockerManager:
                     detach=True,
                     mem_limit=f"{user.mem_limit}m",                  # e.g. 8192 MB
                     memswap_limit=f"{user.memswap_limit}m",          # e.g. 12288 MB
-                    cpus=user.cpu_limit,                             # e.g. 3.0 (strict)
+                    nano_cpus=int(user.cpu_limit * 1e9),                             # e.g. 3.0 (strict)
                     runtime='nvidia' if user.gpu_access else None
                 )
 
