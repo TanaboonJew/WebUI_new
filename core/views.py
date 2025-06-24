@@ -483,8 +483,6 @@ def superuser_dashboard(request):
             jupyter_status = 'running' if container.status == 'running' else 'stopped'
             cpu_usage = stats.get('cpu_percent', 0)
             gpu_usage = stats.get('gpu_percent', 0)
-            print(cpu_usage)
-            print(gpu_usage)
         else:
             docker_status = 'stopped'
             jupyter_status = 'stopped'
@@ -572,8 +570,6 @@ def approve_users(request):
 
 @login_required
 def request_role_verification(request):
-    if not request.user.is_superuser:
-        return redirect('home')
     
     if request.method == 'POST':
         role = request.POST.get('intended_role')
@@ -598,7 +594,6 @@ def allocate_resources(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
 
     if request.method == 'POST':
-        print("POST data:", request.POST)
         mem_limit = request.POST.get('mem_limit')
         memswap_limit = request.POST.get('memswap_limit')
         cpu_limit = request.POST.get('cpu_limit')
