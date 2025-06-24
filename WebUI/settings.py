@@ -1,4 +1,4 @@
-import os
+import os, sys
 from pathlib import Path
 
 # === BASE DIRECTORY ===
@@ -122,3 +122,50 @@ os.makedirs(MEDIA_ROOT, exist_ok=True)
 os.makedirs(os.path.join(MEDIA_ROOT, 'jupyter_notebooks'), exist_ok=True)
 os.makedirs(os.path.join(MEDIA_ROOT, 'docker_volumes'), exist_ok=True)
 os.makedirs(os.path.join(MEDIA_ROOT, 'ai_models'), exist_ok=True)
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+        },
+        'stderr': {
+            'class': 'logging.StreamHandler',
+            'stream': sys.stderr,
+        },
+    },
+
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] [{levelname}] {name}: {message}',
+            'style': '{',
+        },
+    },
+
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['stderr'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'WebUI': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
