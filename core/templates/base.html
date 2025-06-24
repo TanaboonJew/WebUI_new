@@ -17,6 +17,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <!-- Always visible links -->
+                     {% if not user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'public-monitoring' %}">
                             <i class="fas fa-chart-bar me-1"></i> System Monitoring
@@ -27,17 +28,12 @@
                     {% if user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'private-monitoring' %}">
-                             <i class="fas fa-chart-line me-1"></i> Container Stats
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'file-manager' %}">
-                            <i class="fas fa-folder me-1"></i> File Manager
+                             <i class="fas fa-chart-line me-1"></i> Container Monitoring
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'ai-dashboard' %}">
-                            <i class="fas fa-brain me-1"></i> AI Models
+                            <i class="fas fa-brain me-1"></i> Jupyter Portal
                         </a>
                     </li>
                     {% endif %}
