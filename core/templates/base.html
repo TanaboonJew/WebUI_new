@@ -17,13 +17,12 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <!-- Always visible links -->
-                    {% if not user.is_authenticated %}
+                     {% if not user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'public-monitoring' %}">
                             <i class="fas fa-chart-bar me-1"></i> System Monitoring
                         </a>
                     </li>
-                    {% endif %}
                     
                     <!-- Authenticated user links -->
                     {% if user.is_authenticated %}
@@ -43,11 +42,8 @@
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link" href="{% url 'superuser-dashboard' %}">
-                            <i class="fas fa-brain me-1"></i> Admin Dashboard
-                        </a>
-                        <a class="nav-link" href="{% url 'approve_users' %}">
-                            <i class="fas fa-brain me-1"></i> Admin Verify
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> {{ user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             {% if user.is_superuser %}
