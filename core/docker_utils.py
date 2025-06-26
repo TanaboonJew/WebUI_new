@@ -288,6 +288,7 @@ class DockerManager:
             logger.error(f"start_or_resume_container failed: {e}")
             return None, None
 
+    @staticmethod
     def get_container_status(user, container_type='jupyter'):
         container = DockerContainer.objects.filter(user=user, container_type=container_type).first()
         if not container:
