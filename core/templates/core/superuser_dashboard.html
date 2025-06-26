@@ -50,15 +50,16 @@ tr.updated {
           </td>
           <td>{{ usage.disk_usage }}</td>
           <td>
-            <div class="progress" style="height: 20px;">
-              <div id="cpu-progress-{{ usage.id }}" class="progress-bar text-dark {% if usage.cpu_usage > 80 %}bg-danger{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ usage.cpu_usage }}%;">
-                <span id="cpu-text-{{ usage.id }}">{{ usage.cpu_usage }}%</span>
-              </div>
+            <div id="cpu-progress-{{ usage.id }}" 
+                class="progress-bar text-dark {% if usage.cpu_usage > 80 %}bg-danger{% else %}bg-success{% endif %}" 
+                role="progressbar" 
+                style="width: {{ usage.cpu_usage }}%;">
+              <span id="cpu-text-{{ usage.id }}">{{ usage.cpu_usage }}%</span>
             </div>
           </td>
           <td>
-            <div class="progress text-dark" style="height: 20px;">
-              <div class="progress-bar 
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar text-dark 
                   {% if usage.gpu.utilization > 80 %}
                     bg-danger
                   {% elif usage.gpu.utilization > 50 %}
