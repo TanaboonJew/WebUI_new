@@ -339,7 +339,7 @@ def ai_dashboard(request):
 
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
-    
+
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'form': form,
