@@ -17,13 +17,6 @@ def user_model_path(instance, filename):
 def user_dockerfile_path(instance, filename):
     return f"user_{instance.user.id}_{instance.user.username}/{filename}"
 
-FRAMEWORK_CHOICES = [
-    ('tensorflow', 'TensorFlow'),
-    ('pytorch', 'PyTorch'),
-    ('onnx', 'ONNX'),
-    ('keras', 'Keras')
-]
-
 class DockerContainer(models.Model):
     STATUS_CHOICES = [
         ('building', 'Building'),
@@ -48,7 +41,6 @@ class DockerContainer(models.Model):
     resource_limits = models.JSONField(default=dict)
     image_name = models.CharField(max_length=255, blank=True)
     port_bindings = models.JSONField(default=dict)
-    framework = models.CharField(max_length=20, choices=FRAMEWORK_CHOICES, default='tensorflow')
     
     class Meta:
         ordering = ['-created_at']
@@ -91,9 +83,16 @@ class UserFile(models.Model):
 
 
 class AIModel(models.Model):
+    FRAMEWORKS = [
+        ('tensorflow', 'TensorFlow'),
+        ('pytorch', 'PyTorch'),
+        ('onnx', 'ONNX'),
+        ('keras', 'Keras')
+    ]
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='ai_models')
     name = models.CharField(max_length=100)
-    framework = models.CharField(max_length=20, choices=FRAMEWORK_CHOICES)
+    framework = models.CharField(max_length=20, choices=FRAMEWORKS)
     model_file = models.FileField(upload_to=user_model_path)
     created_at = models.DateTimeField(auto_now_add=True)
     file_type = 'models'  # Used in upload path
