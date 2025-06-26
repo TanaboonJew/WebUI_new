@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import FileResponse, Http404, HttpResponseForbidden
-from .docker_utils import docker_manager, manage_container
+from .docker_utils import docker_manager, manage_container, get_container_status
 from .file_utils import ensure_workspace_exists
 from .models import DockerContainer, UserFile, AIModel, CustomUser
 from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm, DockerImageForm
