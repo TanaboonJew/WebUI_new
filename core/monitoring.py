@@ -138,6 +138,7 @@ def get_user_container_stats(container_id):
         except Exception as e:
             print(f"[GPU] Error using pynvml: {e}")
 
+        print(f"[DEBUG] GPU percent: {gpu_utilization}, GPU memory MB: {gpu_memory_mb}")
         return {
             'cpu_percent': round(cpu_percent, 2),
             'gpu_percent': gpu_utilization,
