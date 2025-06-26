@@ -291,6 +291,7 @@ def ai_dashboard(request):
                 if user_container:
                     user_container.jupyter_token = jupyter_token or ''
                     user_container.status = 'running'
+                    user_container.framework = framework
                     user_container.save()
 
                 messages.success(request, f"Jupyter Notebook started! Token: {jupyter_token or 'N/A'}")

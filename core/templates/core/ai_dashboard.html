@@ -30,6 +30,9 @@
                             <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
                         {% endif %}
                         <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
+                        {% if container.framework %}
+                        <strong>Framework:</strong> <code>{{ container.framework|title }}</code>
+                        {% endif %}
                     </div>
                     {% if jupyter_token %}
                         <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
