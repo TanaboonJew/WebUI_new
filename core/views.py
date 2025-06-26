@@ -339,7 +339,9 @@ def ai_dashboard(request):
 
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
-
+                
+    latest_model = AIModel.objects.filter(user=request.user).order_by('-created_at').first()
+    
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
         'form': form,
@@ -347,6 +349,7 @@ def ai_dashboard(request):
         'jupyter_url': jupyter_url,
         'container_status': container_status,
         'container': user_container,
+        'latest_model': latest_model,
     })
 
 @role_verified_required
