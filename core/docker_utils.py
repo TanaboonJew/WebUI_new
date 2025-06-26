@@ -288,20 +288,6 @@ class DockerManager:
             logger.error(f"start_or_resume_container failed: {e}")
             return None, None
 
-    def get_container_status(self, user, container_type='jupyter'):
-        container = DockerContainer.objects.filter(user=user, container_type=container_type).first()
-        if not container:
-            return 'not_found'
-        
-        try:
-            docker_container = self.client.containers.get(container.container_id)
-            return docker_container.status
-        except docker.errors.NotFound:
-            return 'not_found'
-        except Exception as e:
-            print(f"Error checking container status: {e}")
-            return 'error'
-
 # Global instance
 docker_manager = DockerManager()
 
@@ -317,6 +303,3 @@ def get_container_stats(container_id: str) -> Optional[Dict]:
 
 def start_or_resume_container(user: CustomUser, image_name: str, container_type: str = 'jupyter') -> Tuple[Optional[str], Optional[str]]:
     return docker_manager.start_or_resume_container(user, image_name, container_type)
-
-def get_container_status(user: CustomUser, container_type: str = 'jupyter') -> str:
-    return docker_manager.get_container_status(user, container_type)
