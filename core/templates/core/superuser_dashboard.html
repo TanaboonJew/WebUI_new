@@ -62,7 +62,7 @@ tr.updated {
             </div>
           </td>
           <td>
-            <div class="progress" style="height: 20px;">
+            <div class="progress" style="height: 20px; position: relative;">
               <div class="progress-bar 
                   {% if usage.gpu_usage > 80 %}
                     bg-danger
@@ -73,8 +73,10 @@ tr.updated {
                   {% endif %}" 
                   role="progressbar"
                   style="width: {{ usage.gpu_usage }}%;">
-                {{ usage.gpu_usage }}%
               </div>
+              <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
+                {{ usage.gpu_usage }}%
+              </span>
             </div>
           </td>
           <td>{{ usage.updated_at|date:"Y-m-d H:i:s" }}</td>
