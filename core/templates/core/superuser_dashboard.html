@@ -49,8 +49,8 @@ tr.updated {
             {% endif %}
           </td>
           <td>{{ usage.disk_usage }}</td>
-          <td style="position: relative;">
-            <div class="progress" style="height: 20px;">
+          <td>
+            <div class="progress" style="height: 20px; position: relative;">
               <div id="cpu-progress-{{ usage.id }}" class="progress-bar 
                   {% if usage.cpu_usage > 80 %}bg-danger{% else %}bg-success{% endif %}" 
                   role="progressbar" 
