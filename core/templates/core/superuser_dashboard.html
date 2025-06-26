@@ -49,28 +49,35 @@ tr.updated {
             {% endif %}
           </td>
           <td>{{ usage.disk_usage }}</td>
-          <td>
-            <div id="cpu-progress-{{ usage.id }}" 
-                class="progress-bar text-dark {% if usage.cpu_usage > 80 %}bg-danger{% else %}bg-success{% endif %}" 
-                role="progressbar" 
-                style="width: {{ usage.cpu_usage }}%;">
-              <span id="cpu-text-{{ usage.id }}">{{ usage.cpu_usage }}%</span>
+          <td style="position: relative;">
+            <div class="progress" style="height: 20px;">
+              <div id="cpu-progress-{{ usage.id }}" class="progress-bar 
+                  {% if usage.cpu_usage > 80 %}bg-danger{% else %}bg-success{% endif %}" 
+                  role="progressbar" 
+                  style="width: {{ usage.cpu_usage }}%;">
+              </div>
+              <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
+                {{ usage.cpu_usage }}%
+              </span>
             </div>
           </td>
-          <td>
+
+          <td style="position: relative;">
             <div class="progress" style="height: 20px;">
-              <div class="progress-bar text-dark 
+              <div class="progress-bar 
                   {% if usage.gpu.utilization > 80 %}
                     bg-danger
                   {% elif usage.gpu.utilization > 50 %}
                     bg-warning
                   {% else %}
                     bg-success
-                  {% endif %}"
-                  role="progressbar"
+                  {% endif %}" 
+                  role="progressbar" 
                   style="width: {{ usage.gpu.utilization }}%;">
-                {{ usage.gpu.utilization }}%
               </div>
+              <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
+                {{ usage.gpu.utilization }}%
+              </span>
             </div>
           </td>
           <td>{{ usage.updated_at|date:"Y-m-d H:i:s" }}</td>
