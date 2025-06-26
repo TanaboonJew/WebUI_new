@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import FileResponse, Http404, HttpResponseForbidden
-from .docker_utils import docker_manager, manage_container
+from .docker_utils import docker_manager, manage_container, get_container_status
 from .file_utils import ensure_workspace_exists
 from .models import DockerContainer, UserFile, AIModel, CustomUser
 from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm, DockerImageForm
@@ -215,13 +215,22 @@ def private_dashboard(request):
     container = DockerContainer.objects.filter(user=request.user).first()
     if container:
         container_stats = get_user_container_stats(container.container_id)
-        
-        # Normalize CPU percent by user's cpu_limit if available
-        if container_stats and container_stats.get('cpu_percent') is not None:
-            cpu_raw = container_stats['cpu_percent']
+
+        if container_stats:
+            cpu_raw = container_stats.get('cpu_percent')
             user_cpu_limit = getattr(request.user, 'cpu_limit', 1)
-            if user_cpu_limit > 0:
+            if cpu_raw is not None and user_cpu_limit > 0:
                 container_stats['cpu_percent'] = round(cpu_raw / user_cpu_limit, 2)
+            else:
+                container_stats['cpu_percent'] = 0
+
+            memory_usage = container_stats.get('memory_usage', 0)
+            memory_limit = container_stats.get('memory_limit', 0)
+            if memory_limit and memory_limit > 0:
+                memory_percent = (memory_usage / memory_limit) * 100
+            else:
+                memory_percent = 0
+            container_stats['memory_percent'] = round(memory_percent, 2)
     
     return render(request, 'core/private_dashboard.html', {
         'system_stats': system_stats,
@@ -242,7 +251,13 @@ def ai_dashboard(request):
     container_status = None
 
     if user_container:
-        container_status = user_container.status
+        real_status = docker_manager.get_container_status(request.user, container_type='jupyter')
+        if real_status != user_container.status:
+            user_container.status = real_status
+            user_container.save()
+
+        container_status = real_status
+        
         if container_status == 'running':
             jupyter_url = f"http://{settings.SERVER_IP}:{user_container.jupyter_port}/?token={user_container.jupyter_token}"
             jupyter_token = user_container.jupyter_token

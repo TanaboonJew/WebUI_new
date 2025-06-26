@@ -30,8 +30,8 @@
                 <div class="col-md-6">
                     <h5>Memory Usage</h5>
                     <div class="progress">
-                        <div id="memory-progress" class="progress-bar" role="progressbar" 
-                             style="width: {{ container_stats.memory_usage|divisibleby:container_stats.memory_limit|floatformat:2|default:0 }}%">
+                        <div id="memory-progress" class="progress-bar" role="progressbar"
+                            style="width: {{ container_stats.memory_percent }}%">
                             <span id="memory-text">
                                 {{ container_stats.memory_usage|filesizeformat }} / {{ container_stats.memory_limit|filesizeformat }}
                             </span>
