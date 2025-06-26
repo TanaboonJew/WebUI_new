@@ -147,6 +147,7 @@ class DockerManager:
                         'status': 'running',
                         'jupyter_token': token,
                         'jupyter_port': port,
+                        'framework': framework,
                         'resource_limits': {
                             'cpu': user.cpu_limit,
                             'ram': user.mem_limit,

@@ -300,6 +300,7 @@ def ai_dashboard(request):
             return redirect('ai-dashboard')
 
         elif 'stop_jupyter' in request.POST:
+            framework = request.POST.get('framework', '').strip().lower()
             result = docker_manager.manage_container(request.user, 'stop', container_type='jupyter')
             if result:
                 messages.success(request, "Jupyter Notebook stopped successfully")
@@ -339,8 +340,6 @@ def ai_dashboard(request):
 
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
-                
-    latest_model = AIModel.objects.filter(user=request.user).order_by('-created_at').first()
     
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
@@ -349,7 +348,6 @@ def ai_dashboard(request):
         'jupyter_url': jupyter_url,
         'container_status': container_status,
         'container': user_container,
-        'latest_model': latest_model,
     })
 
 @role_verified_required

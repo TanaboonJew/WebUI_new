@@ -41,6 +41,7 @@ class DockerContainer(models.Model):
     resource_limits = models.JSONField(default=dict)
     image_name = models.CharField(max_length=255, blank=True)
     port_bindings = models.JSONField(default=dict)
+    framework = models.CharField(max_length=20, choices=AIModel.FRAMEWORKS, default='tensorflow')
     
     class Meta:
         ordering = ['-created_at']
