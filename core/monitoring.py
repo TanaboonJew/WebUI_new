@@ -113,21 +113,31 @@ def get_user_container_stats(container_id):
 
             import pynvml
             pynvml.nvmlInit()
-            
+
             gpu_utilization = 0
-            try:
-                util = pynvml.nvmlDeviceGetUtilizationRates(handle)
-                gpu_utilization = util.gpu  # ในหน่วย %
-            except pynvml.NVMLError as e:
-                print(f"[GPU] Utilization error: {e}")
-
-            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+            handle = None
 
             try:
-                processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
-            except pynvml.NVMLError_NotSupported:
+                handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+            except Exception as e:
+                print(f"[GPU] Error getting handle: {e}")
+
+            if handle:
+                try:
+                    util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+                    gpu_utilization = util.gpu  # ในหน่วย %
+                except pynvml.NVMLError as e:
+                    print(f"[GPU] Utilization error: {e}")
+
+                try:
+                    processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
+                except pynvml.NVMLError_NotSupported:
+                    processes = []
+            else:
                 processes = []
 
+            # ต่อจากนี้ใช้ processes ตามเดิม
+            gpu_memory_mb = 0
             for proc in processes:
                 if proc.pid in pids:
                     used_memory = getattr(proc, 'usedGpuMemory', 0)
