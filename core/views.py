@@ -279,7 +279,11 @@ def ai_dashboard(request):
         if 'start_jupyter' in request.POST:
             framework = request.POST.get('framework', '').strip().lower()
             if not framework:
-                framework = 'tensorflow'
+                db_container = DockerContainer.objects.filter(user=request.user).first()
+                if db_container and db_container.framework:
+                    framework = db_container.framework
+                else:
+                    framework = 'tensorflow'
 
             image_map = {
                 'tensorflow': 'my-tf-19',
@@ -304,7 +308,7 @@ def ai_dashboard(request):
                     jupyter_url = container_result
                     jupyter_token = None
 
-                # Save token and status
+                user_container = DockerContainer.objects.filter(user=request.user).first()
                 if user_container:
                     user_container.jupyter_token = jupyter_token or ''
                     user_container.status = 'running'
