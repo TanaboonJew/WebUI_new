@@ -253,10 +253,27 @@ def ai_dashboard(request):
     container_status = None
 
     if user_container:
-        container_status = user_container.status
-        if container_status == 'running':
-            jupyter_url = f"http://{settings.SERVER_IP}:{user_container.jupyter_port}/?token={user_container.jupyter_token}"
-            jupyter_token = user_container.jupyter_token
+        try:
+            container_name = f"jupyter_{request.user.id}_{request.user.username}"
+            container = docker_manager.client.containers.get(container_name)
+            real_status = container.status 
+
+            if user_container.status != real_status:
+                user_container.status = real_status
+                user_container.save()
+
+            container_status = real_status 
+
+            if real_status == 'running':
+                jupyter_url = f"http://{settings.SERVER_IP}:{user_container.jupyter_port}/?token={user_container.jupyter_token}"
+                jupyter_token = user_container.jupyter_token
+
+        except docker.errors.NotFound:
+            container_status = 'not_found' 
+            user_container = None  
+
+    else:
+        container_status = 'not_found' 
 
     if request.method == 'POST':
         if 'start_jupyter' in request.POST:

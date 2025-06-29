@@ -13,7 +13,7 @@
                     <span>
                     {% if container.status == 'running' %}
                         <span class="badge bg-success">Running</span>
-                    {% elif container.status == 'stopped' %}
+                    {% elif container.status == 'exited' %}
                         <span class="badge bg-danger">Stopped</span>
                     {% else %}
                         <span class="badge bg-secondary">Unknown</span>
@@ -21,7 +21,7 @@
                     </span>
                 </div>
                 <div class="card-body">
-                    {% if container.status == 'running' or container.status == 'stopped'%}
+                    {% if container.status == 'running' or container.status == 'exited'%}
                     <div class="alert alert-success">
                         {% if container.status == 'running'%}
                             Notebook is running!<br>
@@ -29,7 +29,7 @@
                         {% if jupyter_token %}
                             <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
                         {% endif %}
-                        <strong>Container ID:</strong> <code>{{ container.container_id }}</code>
+                        <strong>Container ID:</strong> <code>{{ container.container_id }}</code><br>
                         {% if container.framework %}
                         <strong>Framework:</strong> <code>{{ container.framework|title }}</code>
                         {% endif %}
@@ -42,7 +42,7 @@
    
                     <form method="post" class="d-inline">
                         {% csrf_token %}
-                        {% if container.status == 'stopped' %}    
+                        {% if container.status == 'exited' %}    
                             <button type="submit" name="start_jupyter" class="btn btn-success">
                                 <i class="fas fa-stop"></i> Start Notebook
                             </button>   
