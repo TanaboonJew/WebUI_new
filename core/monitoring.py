@@ -64,6 +64,17 @@ def get_gpu_stats():
         pass
     return None
 
+def get_all_child_pids(pid):
+    pids = [pid]
+    try:
+        children = os.popen(f"cat /proc/{pid}/task/{pid}/children").read().strip()
+        if children:
+            for child_pid in children.split():
+                pids.extend(get_all_child_pids(int(child_pid)))
+    except Exception as e:
+        print(f"[PID] Error reading children: {e}")
+    return pids
+
 def get_user_container_stats(container_id):
     """Get stats for a user's Docker container"""
     if not docker_client:
@@ -100,16 +111,11 @@ def get_user_container_stats(container_id):
         gpu_memory_mb = 0
         try:
             inspect = docker_container.attrs
-            pids = []
             pid_host = inspect["State"]["Pid"]
             if pid_host != 0:
-                pids = [pid_host]
-                try:
-                    children_output = os.popen(f"cat /proc/{pid_host}/task/{pid_host}/children").read()
-                    if children_output.strip():
-                        pids += [int(pid) for pid in children_output.strip().split()]
-                except Exception as e:
-                    print(f"[PID] Error reading children: {e}")
+                pids = get_all_child_pids(pid_host)
+            else:
+                pids = []
 
             import pynvml
             pynvml.nvmlInit()
@@ -125,7 +131,7 @@ def get_user_container_stats(container_id):
             if handle:
                 try:
                     util = pynvml.nvmlDeviceGetUtilizationRates(handle)
-                    gpu_utilization = util.gpu  # ในหน่วย %
+                    gpu_utilization = util.gpu  # %
                 except pynvml.NVMLError as e:
                     print(f"[GPU] Utilization error: {e}")
 
@@ -136,17 +142,18 @@ def get_user_container_stats(container_id):
             else:
                 processes = []
 
-            # ต่อจากนี้ใช้ processes ตามเดิม
             gpu_memory_mb = 0
             for proc in processes:
                 if proc.pid in pids:
                     used_memory = getattr(proc, 'usedGpuMemory', 0)
-                    gpu_memory_mb += used_memory // (1024 * 1024)  # Bytes to MB
+                    gpu_memory_mb += used_memory // (1024 * 1024)
 
             pynvml.nvmlShutdown()
 
         except Exception as e:
             print(f"[GPU] Error using pynvml: {e}")
+            gpu_utilization = 0
+            gpu_memory_mb = 0
 
         print(f"[DEBUG] GPU percent: {gpu_utilization}, GPU memory MB: {gpu_memory_mb}")
         return {

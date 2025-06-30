@@ -22,7 +22,6 @@ tr.updated {
           <th>Username</th>
           <th>Docker</th>
           <th>Jupyter</th>
-          <th>Disk (GB)</th>
           <th>CPU (%)</th>
           <th>GPU (%)</th>
           <th>Last Updated</th>
@@ -48,7 +47,6 @@ tr.updated {
               <span class="badge bg-danger">stopped</span>
             {% endif %}
           </td>
-          <td>{{ usage.disk_usage }}</td>
           <td>
             <div class="progress" style="height: 20px; position: relative;">
               <div id="cpu-progress-{{ usage.id }}" class="progress-bar 
