@@ -120,21 +120,13 @@ def get_user_container_stats(container_id):
             import pynvml
             pynvml.nvmlInit()
 
-            gpu_utilization = 0
             handle = None
-
             try:
                 handle = pynvml.nvmlDeviceGetHandleByIndex(0)
             except Exception as e:
                 print(f"[GPU] Error getting handle: {e}")
 
             if handle:
-                try:
-                    util = pynvml.nvmlDeviceGetUtilizationRates(handle)
-                    gpu_utilization = util.gpu  # %
-                except pynvml.NVMLError as e:
-                    print(f"[GPU] Utilization error: {e}")
-
                 try:
                     processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
                 except pynvml.NVMLError_NotSupported:
@@ -152,13 +144,12 @@ def get_user_container_stats(container_id):
 
         except Exception as e:
             print(f"[GPU] Error using pynvml: {e}")
-            gpu_utilization = 0
             gpu_memory_mb = 0
 
-        print(f"[DEBUG] GPU percent: {gpu_utilization}, GPU memory MB: {gpu_memory_mb}")
+        print(f"[DEBUG] GPU memory MB: {gpu_memory_mb}")
         return {
             'cpu_percent': round(cpu_percent, 2),
-            'gpu_percent': gpu_utilization,
+            # 'gpu_percent' ตัดออก เพราะเป็น GPU utilization ของ device ไม่ใช่ container
             'gpu_memory_mb': gpu_memory_mb,
             'memory_usage': stats['memory_stats'].get('usage', 0),
             'memory_limit': stats['memory_stats'].get('limit', 0),
