@@ -23,7 +23,7 @@ tr.updated {
           <th>Docker</th>
           <th>Jupyter</th>
           <th>CPU (%)</th>
-          <th>GPU (%)</th>
+          <th>GPU Memory (MB)</th>
           <th>Last Updated</th>
           <th>Actions</th>
           <th>Pause</th>
@@ -61,20 +61,24 @@ tr.updated {
           </td>
           <td>
             <div class="progress" style="height: 20px; position: relative;">
-              <div class="progress-bar 
-                  {% if usage.gpu_usage > 80 %}
-                    bg-danger
-                  {% elif usage.gpu_usage > 50 %}
-                    bg-warning
-                  {% else %}
-                    bg-success
-                  {% endif %}" 
-                  role="progressbar"
-                  style="width: {{ usage.gpu_usage }}%;">
-              </div>
-              <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
-                {{ usage.gpu_usage }}%
-              </span>
+              {% with max_gpu_mem=16000 %}
+                {% with percent=usage.gpu_memory_mb|max:0|divisibleby:max_gpu_mem|floatformat:2 %}
+                  <div class="progress-bar 
+                      {% if percent > 80 %}
+                        bg-danger
+                      {% elif percent > 50 %}
+                        bg-warning
+                      {% else %}
+                        bg-success
+                      {% endif %}" 
+                      role="progressbar"
+                      style="width: {{ percent }}%;">
+                  </div>
+                  <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
+                    {{ usage.gpu_memory_mb }} MB
+                  </span>
+                {% endwith %}
+              {% endwith %}
             </div>
           </td>
           <td>{{ usage.updated_at|date:"Y-m-d H:i:s" }}</td>
