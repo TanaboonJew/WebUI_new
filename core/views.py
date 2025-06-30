@@ -504,6 +504,8 @@ def superuser_dashboard(request):
     users = User.objects.all()
     usages = []
 
+    MAX_GPU_MEMORY_MB = 16000  # กำหนดค่ามาตรฐาน max GPU memory
+
     for user in users:
         if not isinstance(user, CustomUser):  # ป้องกัน type error
             continue
@@ -515,12 +517,15 @@ def superuser_dashboard(request):
             docker_status = container.status
             jupyter_status = 'running' if container.status == 'running' else 'stopped'
             cpu_usage = stats.get('cpu_percent', 0)
-            gpu_usage = stats.get('gpu_percent', 0)
+            gpu_memory_mb = stats.get('gpu_memory_mb', 0)  # เปลี่ยนชื่อให้ตรง
+            # คำนวณ percent ที่ส่งไป template
+            gpu_memory_percent = (gpu_memory_mb / MAX_GPU_MEMORY_MB) * 100 if MAX_GPU_MEMORY_MB > 0 else 0
         else:
             docker_status = 'stopped'
             jupyter_status = 'stopped'
             cpu_usage = 0
-            gpu_usage = 0
+            gpu_memory_mb = 0
+            gpu_memory_percent = 0
 
         usage = {
             'user': user,
@@ -528,7 +533,8 @@ def superuser_dashboard(request):
             'jupyter_status': jupyter_status,
             'disk_usage': 10,
             'cpu_usage': cpu_usage,
-            'gpu_usage': gpu_usage,
+            'gpu_memory_mb': gpu_memory_mb,         # ส่งค่า MB
+            'gpu_memory_percent': gpu_memory_percent,  # ส่งค่า %
             'updated_at': timezone.now(),
             'container': container,
         }

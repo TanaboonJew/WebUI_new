@@ -61,24 +61,20 @@ tr.updated {
           </td>
           <td>
             <div class="progress" style="height: 20px; position: relative;">
-              {% with max_gpu_mem=16000 %}
-                {% with percent=usage.gpu_memory_mb|max:0|divisibleby:max_gpu_mem|floatformat:2 %}
-                  <div class="progress-bar 
-                      {% if percent > 80 %}
-                        bg-danger
-                      {% elif percent > 50 %}
-                        bg-warning
-                      {% else %}
-                        bg-success
-                      {% endif %}" 
-                      role="progressbar"
-                      style="width: {{ percent }}%;">
-                  </div>
-                  <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
-                    {{ usage.gpu_memory_mb }} MB
-                  </span>
-                {% endwith %}
-              {% endwith %}
+              <div class="progress-bar 
+                  {% if usage.gpu_memory_percent > 80 %}
+                    bg-danger
+                  {% elif usage.gpu_memory_percent > 50 %}
+                    bg-warning
+                  {% else %}
+                    bg-success
+                  {% endif %}" 
+                  role="progressbar"
+                  style="width: {{ usage.gpu_memory_percent }}%;">
+              </div>
+              <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
+                {{ usage.gpu_memory_mb }} MB
+              </span>
             </div>
           </td>
           <td>{{ usage.updated_at|date:"Y-m-d H:i:s" }}</td>
