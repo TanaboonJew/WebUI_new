@@ -11,15 +11,19 @@ def control_container(container_id, action):
     client = from_env()
     try:
         container = client.containers.get(container_id)
-        logger.info(f"Trying to {action} container {container_id} (status={container.status})")
+        print(f"[Scheduler] Trying to {action} container {container_id}, current status: {container.status}")
+        
         if action == "start" and container.status != "running":
             container.start()
-            logger.info(f"Container {container_id} started")
+            print(f"[Scheduler] Container {container_id} started")
         elif action == "stop" and container.status == "running":
             container.stop()
-            logger.info(f"Container {container_id} stopped")
+            print(f"[Scheduler] Container {container_id} stopped")
+        else:
+            print(f"[Scheduler] No action taken for container {container_id} with action {action}")
     except Exception as e:
-        logger.error(f"Error {action}ing container {container_id}: {e}")
+        print(f"[Scheduler][Error] Error {action}ing container {container_id}: {e}")
+
 
 
 def schedule_all_containers(scheduler):

@@ -126,7 +126,6 @@ def get_user_container_stats(container_id):
             print(f"[GPU] Error using pynvml: {e}")
             gpu_memory_mb = 0
 
-        print(f"[DEBUG] GPU memory MB: {gpu_memory_mb}")
         return {
             'cpu_percent': round(cpu_percent, 2),
             'gpu_memory_mb': gpu_memory_mb,
