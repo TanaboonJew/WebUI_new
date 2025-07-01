@@ -1,11 +1,12 @@
-from django.apps import AppConfig
+from django.db.utils import OperationalError
+from django.apps import apps
 
-class CoreConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'core'
-
-    def ready(self):
-        # import แล้วเรียก start_scheduler() ที่นี่
-        from .scheduler import start_scheduler
-        start_scheduler()
-        print("[Scheduler] CoreConfig ready() called")
+def ready(self):
+    try:
+        # เช็คว่าตาราง ContainerSchedule มีอยู่หรือไม่
+        if apps.get_model('core', 'ContainerSchedule').objects.exists():
+            from .scheduler import start_scheduler
+            start_scheduler()
+    except OperationalError:
+        # migration ยังไม่เสร็จดี
+        pass
