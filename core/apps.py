@@ -9,7 +9,8 @@ scheduler = BackgroundScheduler()
 def start_scheduler(sender, **kwargs):
     if not scheduler.running:
         scheduler.add_jobstore(DjangoJobStore(), "default")
-        from .jobs import schedule_all_containers
+        # Import ฟังก์ชัน schedule_all_containers ภายในฟังก์ชันนี้ (lazy import)
+        from .jobs import schedule_all_containers  
         schedule_all_containers(scheduler)
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())
@@ -20,5 +21,6 @@ class CoreConfig(AppConfig):
     name = 'core'
 
     def ready(self):
+        # เชื่อมสัญญาณหลังจาก migrate เสร็จ
         post_migrate.connect(start_scheduler, sender=self)
         print("[Scheduler] CoreConfig ready() connected post_migrate signal")

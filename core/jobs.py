@@ -1,5 +1,4 @@
 from .models import DockerContainer
-from .models import ContainerSchedule
 from docker import from_env
 from django.utils import timezone
 from apscheduler.triggers.cron import CronTrigger
@@ -24,6 +23,7 @@ def control_container(container_id, action):
 
 
 def schedule_all_containers(scheduler):
+    from .models import ContainerSchedule  # import ในฟังก์ชัน
     for schedule in ContainerSchedule.objects.filter(active=True):
         container = schedule.container
         container_id = container.container_id
