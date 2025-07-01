@@ -27,7 +27,7 @@ def control_container(container_id, action):
 
 
 def schedule_all_containers(scheduler):
-    from .models import ContainerSchedule  # import ในฟังก์ชัน
+    from .models import ContainerSchedule
     for schedule in ContainerSchedule.objects.filter(active=True):
         container = schedule.container
         container_id = container.container_id
@@ -35,7 +35,11 @@ def schedule_all_containers(scheduler):
         # Schedule start
         scheduler.add_job(
             control_container,
-            trigger=CronTrigger(hour=schedule.start_time.hour, minute=schedule.start_time.minute),
+            trigger=CronTrigger(
+                hour=schedule.start_time.hour,
+                minute=schedule.start_time.minute,
+                timezone=timezone.get_current_timezone(),  # 👈 สำคัญ
+            ),
             args=[container_id, "start"],
             id=f"start_{container_id}",
             replace_existing=True,
@@ -44,7 +48,11 @@ def schedule_all_containers(scheduler):
         # Schedule stop
         scheduler.add_job(
             control_container,
-            trigger=CronTrigger(hour=schedule.end_time.hour, minute=schedule.end_time.minute),
+            trigger=CronTrigger(
+                hour=schedule.end_time.hour,
+                minute=schedule.end_time.minute,
+                timezone=timezone.get_current_timezone(),  # 👈 สำคัญ
+            ),
             args=[container_id, "stop"],
             id=f"stop_{container_id}",
             replace_existing=True,
