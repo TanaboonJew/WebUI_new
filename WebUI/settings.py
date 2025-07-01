@@ -134,10 +134,12 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
+            'formatter': 'verbose',
         },
         'stderr': {
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
+            'formatter': 'verbose',
         },
     },
 
@@ -165,6 +167,11 @@ LOGGING = {
             'propagate': False,
         },
         'WebUI': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'core': {   
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
