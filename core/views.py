@@ -710,7 +710,7 @@ def create_schedule(request, user_id):
         return redirect('superuser-dashboard')
 
     existing_schedule = getattr(container, 'schedules', None)
-    return render(request, 'schedule_form.html', {
+    return render(request, 'core/schedule_form.html', {
         'user': user,
         'container': container,
         'schedule': existing_schedule.first() if existing_schedule else None,
