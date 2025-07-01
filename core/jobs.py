@@ -1,4 +1,4 @@
-from container.models import DockerContainer
+from .models import DockerContainer
 from .models import ContainerSchedule
 from docker import from_env
 from django.utils import timezone
