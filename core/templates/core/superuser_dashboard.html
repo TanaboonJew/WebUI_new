@@ -20,7 +20,6 @@ tr.updated {
       <thead class="table-dark">
         <tr>
           <th>Username</th>
-          <th>Docker</th>
           <th>Jupyter</th>
           <th>CPU (%)</th>
           <th>GPU Memory (MB)</th>
@@ -33,13 +32,6 @@ tr.updated {
         {% for usage in usages %}
         <tr id="row-{{ usage.user.username }}">
           <td><strong>{{ usage.user.username }}</strong></td>
-          <td>
-            {% if usage.docker_status == "running" %}
-              <span class="badge bg-success">running</span>
-            {% else %}
-              <span class="badge bg-danger">stopped</span>
-            {% endif %}
-          </td>
           <td>
             {% if usage.jupyter_status == "running" %}
               <span class="badge bg-success">running</span>
