@@ -24,8 +24,9 @@ tr.updated {
           <th>CPU (%)</th>
           <th>GPU Memory (MB)</th>
           <th>Last Updated</th>
-          <th>Actions</th>
+          <th>Allocate</th>
           <th>Pause</th>
+          <th>Schedule</th>
         </tr>
       </thead>
       <tbody id="usage-table-body">
@@ -95,6 +96,11 @@ tr.updated {
             {% else %}
               <span class="text-muted">N/A</span>
             {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'create_schedule' usage.user.id %}" class="btn btn-sm btn-primary">
+              Schedule
+            </a>
           </td>
         </tr>
         {% endfor %}

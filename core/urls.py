@@ -22,5 +22,5 @@ urlpatterns = [
     path('allocate/<int:user_id>/', views.allocate_resources, name='allocate-resources'),
     path('manage/docker/start/<int:container_id>/', views.admin_start_container_view, name='admin-start-container'),
     path('manage/docker/stop/<int:container_id>/', views.admin_stop_container_view, name='admin-stop-container'),
-
+    path('schedule/<int:user_id>/', views.create_schedule, name='create_schedule'),
 ]

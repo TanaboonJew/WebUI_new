@@ -2,6 +2,7 @@ import os
 from django.db import models
 from users.models import CustomUser
 from os.path import basename
+from django.utils import timezone
 
 def user_directory_path(instance, filename):
     """Returns: user_<ID>_(<USERNAME>)/<type>/<filename>"""
@@ -121,3 +122,16 @@ class AIModel(models.Model):
                 os.remove(file_path)
 
         super().delete(*args, **kwargs)
+        
+class ContainerSchedule(models.Model):
+    container = models.ForeignKey(DockerContainer, on_delete=models.CASCADE, related_name='schedules')
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    active = models.BooleanField(default=True)
+
+    def is_now_in_schedule(self):
+        now = timezone.localtime().time()
+        return self.start_time <= now <= self.end_time
+
+    def __str__(self):
+        return f"{self.container.user.username} | {self.start_time} - {self.end_time}"

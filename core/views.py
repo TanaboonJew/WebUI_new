@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from .docker_utils import docker_manager, manage_container
 from .file_utils import ensure_workspace_exists
-from .models import DockerContainer, UserFile, AIModel, CustomUser
+from .models import DockerContainer, UserFile, AIModel, CustomUser, ContainerSchedule
 from .forms import DockerfileUploadForm, FileUploadForm, AIModelForm, DockerImageForm
 from .monitoring import get_system_stats, get_user_container_stats
 from django.contrib import messages
@@ -685,3 +685,33 @@ def admin_stop_container_view(request, container_id):
     else:
         messages.error(request, "Failed to stop container.")
     return redirect('superuser-dashboard')
+
+@staff_member_required
+def create_schedule(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    container = DockerContainer.objects.filter(user=user).first()
+
+    if not container:
+        return render(request, 'schedule_form.html', {'error': 'User has no container.'})
+
+    if request.method == 'POST':
+        start_time = request.POST['start_time']
+        end_time = request.POST['end_time']
+        active = 'active' in request.POST
+
+        ContainerSchedule.objects.update_or_create(
+            container=container,
+            defaults={
+                'start_time': start_time,
+                'end_time': end_time,
+                'active': active,
+            }
+        )
+        return redirect('superuser-dashboard')
+
+    existing_schedule = getattr(container, 'schedules', None)
+    return render(request, 'schedule_form.html', {
+        'user': user,
+        'container': container,
+        'schedule': existing_schedule.first() if existing_schedule else None,
+    })

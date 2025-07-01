@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>กำหนดช่วงเวลาใช้งาน Container ของ {{ user.username }}</h2>
+    
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label>Container ID</label>
+            <input type="text" class="form-control" value="{{ container.container_id }}" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label for="start_time">เวลาเริ่ม</label>
+            <input type="time" name="start_time" class="form-control" required
+                   value="{% if schedule %}{{ schedule.start_time|time:'H:i' }}{% endif %}">
+        </div>
+
+        <div class="mb-3">
+            <label for="end_time">เวลาสิ้นสุด</label>
+            <input type="time" name="end_time" class="form-control" required
+                   value="{% if schedule %}{{ schedule.end_time|time:'H:i' }}{% endif %}">
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="active" id="activeSchedule"
+                   {% if schedule and schedule.active %}checked{% else %}checked{% endif %}>
+            <label class="form-check-label" for="activeSchedule">เปิดใช้งาน schedule นี้</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+    </form>
+</div>
+{% endblock %}

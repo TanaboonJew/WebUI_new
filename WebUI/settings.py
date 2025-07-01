@@ -28,7 +28,9 @@ INSTALLED_APPS = [
 
     # Custom apps
     'users',  # Custom user model
-    'core',   # Your main business logic
+    'core.apps.CoreConfig',   # Your main business logic
+    
+    'django_apscheduler',
 ]
 
 # === MIDDLEWARE STACK ===
