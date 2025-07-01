@@ -695,7 +695,7 @@ def create_schedule(request, user_id):
     container = DockerContainer.objects.filter(user=user).first()
 
     if not container:
-        return render(request, 'schedule_form.html', {'error': 'User has no container.'})
+        return render(request, 'core/schedule_form.html', {'error': 'User has no container.'})
 
     if request.method == 'POST':
         start_date = request.POST['start_date']
