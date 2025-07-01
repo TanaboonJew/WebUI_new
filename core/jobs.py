@@ -31,13 +31,13 @@ def control_container(container_id, action):
 
 def schedule_all_containers(scheduler):
     from .models import ContainerSchedule
-    logger.info(f"Now (server time): {timezone.now()}")
-    logger.info(f"Start datetime: {schedule.start_datetime} | End datetime: {schedule.end_datetime}")
     for schedule in ContainerSchedule.objects.filter(active=True):
         container = schedule.container
         container_id = container.container_id
 
+        logger.info(f"Start datetime: {schedule.start_datetime} | End datetime: {schedule.end_datetime}")
         logger.info(f"Scheduling start job for container {container_id} at {schedule.start_datetime}")
+        
         scheduler.add_job(
             control_container,
             trigger=DateTrigger(run_date=schedule.start_datetime, timezone=timezone.get_current_timezone()),
@@ -45,7 +45,6 @@ def schedule_all_containers(scheduler):
             id=f"start_{container_id}_{schedule.start_datetime.isoformat()}",
             replace_existing=True,
         )
-        logger.info(f"Total scheduled jobs: {len(scheduler.get_jobs())}")
 
         logger.info(f"Scheduling stop job for container {container_id} at {schedule.end_datetime}")
         scheduler.add_job(
@@ -55,4 +54,3 @@ def schedule_all_containers(scheduler):
             id=f"stop_{container_id}_{schedule.end_datetime.isoformat()}",
             replace_existing=True,
         )
-        logger.info(f"Total scheduled jobs: {len(scheduler.get_jobs())}")
