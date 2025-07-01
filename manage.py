@@ -7,6 +7,13 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebUI.settings')
+
+    import django
+    django.setup() 
+
+    from core.scheduler import start_scheduler
+    start_scheduler()
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

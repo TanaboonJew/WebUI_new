@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 def control_container(container_id, action):
     logger.info(f"[Scheduler] control_container called with container_id={container_id}, action={action}")
+    
     client = from_env()
     try:
         container = client.containers.get(container_id)
@@ -30,6 +31,8 @@ def control_container(container_id, action):
 
 def schedule_all_containers(scheduler):
     from .models import ContainerSchedule
+    logger.info(f"Now (server time): {timezone.now()}")
+    logger.info(f"Start datetime: {schedule.start_datetime} | End datetime: {schedule.end_datetime}")
     for schedule in ContainerSchedule.objects.filter(active=True):
         container = schedule.container
         container_id = container.container_id
