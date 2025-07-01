@@ -26,6 +26,8 @@ class CustomUser(AbstractUser):
         on_delete=models.SET_NULL,
         related_name='active_user'
     )
+    
+    is_accessible = models.BooleanField(default=True)
 
     def storage_used(self):
         return sum(f.file.size for f in self.user_files.all())
