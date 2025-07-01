@@ -16,15 +16,25 @@
         </div>
 
         <div class="mb-3">
+            <label for="start_date">วันที่เริ่ม</label>
+            <input type="date" name="start_date" class="form-control" required
+                value="{{ schedule.start_datetime.date|default:'' }}">
+        </div>
+        <div class="mb-3">
             <label for="start_time">เวลาเริ่ม</label>
             <input type="time" name="start_time" class="form-control" required
-                   value="{% if schedule %}{{ schedule.start_time|time:'H:i' }}{% endif %}">
+                value="{{ schedule.start_datetime.time|time:'H:i' }}">
         </div>
 
         <div class="mb-3">
+            <label for="end_date">วันที่สิ้นสุด</label>
+            <input type="date" name="end_date" class="form-control" required
+                value="{{ schedule.end_datetime.date|default:'' }}">
+        </div>
+        <div class="mb-3">
             <label for="end_time">เวลาสิ้นสุด</label>
             <input type="time" name="end_time" class="form-control" required
-                   value="{% if schedule %}{{ schedule.end_time|time:'H:i' }}{% endif %}">
+                value="{{ schedule.end_datetime.time|time:'H:i' }}">
         </div>
 
         <div class="form-check mb-3">

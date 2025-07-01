@@ -4,6 +4,7 @@ from django.utils import timezone
 from apscheduler.triggers.cron import CronTrigger
 from django_apscheduler.models import DjangoJobExecution
 import logging
+from apscheduler.triggers.date import DateTrigger
 
 logger = logging.getLogger(__name__)
 
@@ -32,29 +33,18 @@ def schedule_all_containers(scheduler):
         container = schedule.container
         container_id = container.container_id
 
-        # Schedule start
         scheduler.add_job(
             control_container,
-            trigger=CronTrigger(
-                hour=schedule.start_time.hour,
-                minute=schedule.start_time.minute,
-                timezone=timezone.get_current_timezone(),  # 👈 สำคัญ
-            ),
+            trigger=DateTrigger(run_date=schedule.start_datetime, timezone=timezone.get_current_timezone()),
             args=[container_id, "start"],
-            id=f"start_{container_id}",
+            id=f"start_{container_id}_{schedule.start_datetime.isoformat()}",
             replace_existing=True,
         )
 
-        # Schedule stop
         scheduler.add_job(
             control_container,
-            trigger=CronTrigger(
-                hour=schedule.end_time.hour,
-                minute=schedule.end_time.minute,
-                timezone=timezone.get_current_timezone(),  # 👈 สำคัญ
-            ),
+            trigger=DateTrigger(run_date=schedule.end_datetime, timezone=timezone.get_current_timezone()),
             args=[container_id, "stop"],
-            id=f"stop_{container_id}",
+            id=f"stop_{container_id}_{schedule.end_datetime.isoformat()}",
             replace_existing=True,
         )
-

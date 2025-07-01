@@ -125,13 +125,13 @@ class AIModel(models.Model):
         
 class ContainerSchedule(models.Model):
     container = models.ForeignKey(DockerContainer, on_delete=models.CASCADE, related_name='schedules')
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField()
     active = models.BooleanField(default=True)
 
     def is_now_in_schedule(self):
-        now = timezone.localtime().time()
-        return self.start_time <= now <= self.end_time
+        now = timezone.now()
+        return self.start_datetime <= now <= self.end_datetime
 
     def __str__(self):
-        return f"{self.container.user.username} | {self.start_time} - {self.end_time}"
+        return f"{self.container.user.username} | {self.start_datetime} - {self.end_datetime}"

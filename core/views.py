@@ -16,6 +16,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
 from .decorators import role_verified_required
 import os
+from django.utils.dateparse import parse_datetime
 
 def home(request):
     """Home page view that shows different content based on authentication status"""
@@ -695,23 +696,32 @@ def create_schedule(request, user_id):
         return render(request, 'schedule_form.html', {'error': 'User has no container.'})
 
     if request.method == 'POST':
+        start_date = request.POST['start_date']
         start_time = request.POST['start_time']
+        end_date = request.POST['end_date']
         end_time = request.POST['end_time']
         active = 'active' in request.POST
+
+        start_dt_str = f"{start_date} {start_time}"
+        end_dt_str = f"{end_date} {end_time}"
+
+        start_dt = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
+        end_dt = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
 
         ContainerSchedule.objects.update_or_create(
             container=container,
             defaults={
-                'start_time': start_time,
-                'end_time': end_time,
+                'start_datetime': start_dt,
+                'end_datetime': end_dt,
                 'active': active,
             }
         )
         return redirect('superuser-dashboard')
 
-    existing_schedule = getattr(container, 'schedules', None)
+    existing_schedule = container.schedules.first()
+
     return render(request, 'core/schedule_form.html', {
         'user': user,
         'container': container,
-        'schedule': existing_schedule.first() if existing_schedule else None,
+        'schedule': existing_schedule,
     })
