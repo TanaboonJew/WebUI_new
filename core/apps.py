@@ -11,7 +11,7 @@ class CoreConfig(AppConfig):
         scheduler = BackgroundScheduler()
         scheduler.add_jobstore(DjangoJobStore(), "default")
 
-        from .jobs import schedule_all_containers
+        from .jobs import schedule_all_containers  
         schedule_all_containers(scheduler)
 
         scheduler.start()
