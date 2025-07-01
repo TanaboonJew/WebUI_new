@@ -9,6 +9,7 @@ from apscheduler.triggers.date import DateTrigger
 logger = logging.getLogger(__name__)
 
 def control_container(container_id, action):
+    logger.info(f"[Scheduler] control_container called with container_id={container_id}, action={action}")
     client = from_env()
     try:
         container = client.containers.get(container_id)
@@ -41,6 +42,7 @@ def schedule_all_containers(scheduler):
             id=f"start_{container_id}_{schedule.start_datetime.isoformat()}",
             replace_existing=True,
         )
+        logger.info(f"Total scheduled jobs: {len(scheduler.get_jobs())}")
 
         logger.info(f"Scheduling stop job for container {container_id} at {schedule.end_datetime}")
         scheduler.add_job(
@@ -50,3 +52,4 @@ def schedule_all_containers(scheduler):
             id=f"stop_{container_id}_{schedule.end_datetime.isoformat()}",
             replace_existing=True,
         )
+        logger.info(f"Total scheduled jobs: {len(scheduler.get_jobs())}")
