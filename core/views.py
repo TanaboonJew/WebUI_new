@@ -17,6 +17,8 @@ from django.views.decorators.http import require_POST
 from .decorators import role_verified_required
 import os
 from django.utils.dateparse import parse_datetime
+from datetime import datetime
+from .scheduler import reload_schedules
 
 def home(request):
     """Home page view that shows different content based on authentication status"""
@@ -716,6 +718,10 @@ def create_schedule(request, user_id):
                 'active': active,
             }
         )
+        
+        # เรียก reload scheduler job ใหม่
+        reload_schedules()
+
         return redirect('superuser-dashboard')
 
     existing_schedule = container.schedules.first()

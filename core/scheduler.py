@@ -14,3 +14,9 @@ def start_scheduler():
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())
         print("[Scheduler] Scheduler started")
+
+def reload_schedules():
+    scheduler.remove_all_jobs()
+    from .jobs import schedule_all_containers
+    schedule_all_containers(scheduler)
+    print("[Scheduler] Schedules reloaded")

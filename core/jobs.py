@@ -33,6 +33,7 @@ def schedule_all_containers(scheduler):
         container = schedule.container
         container_id = container.container_id
 
+        logger.info(f"Scheduling start job for container {container_id} at {schedule.start_datetime}")
         scheduler.add_job(
             control_container,
             trigger=DateTrigger(run_date=schedule.start_datetime, timezone=timezone.get_current_timezone()),
@@ -41,6 +42,7 @@ def schedule_all_containers(scheduler):
             replace_existing=True,
         )
 
+        logger.info(f"Scheduling stop job for container {container_id} at {schedule.end_datetime}")
         scheduler.add_job(
             control_container,
             trigger=DateTrigger(run_date=schedule.end_datetime, timezone=timezone.get_current_timezone()),
