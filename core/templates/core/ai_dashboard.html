@@ -136,18 +136,27 @@
     </div>-->
 
     <h3>Upcoming Container Schedules</h3>
-    <table>
-    <thead>...</thead>
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Container ID</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Status</th>
+                <th>Time Remaining</th>
+            </tr>
+        </thead>
         <tbody>
             {% for item in upcoming_schedules %}
                 {% with schedule=item.schedule %}
                     <tr style="
                         {% if item.remaining.total_seconds > 3600 %}
-                        background-color: lightgreen;
+                            background-color: lightgreen;
                         {% elif item.remaining.total_seconds > 600 %}
-                        background-color: yellow;
+                            background-color: yellow;
                         {% else %}
-                        background-color: lightcoral;
+                            background-color: lightcoral;
                         {% endif %}
                     ">
                         <td>{{ schedule.container.user.username }}</td>
@@ -165,7 +174,11 @@
                     </tr>
                 {% endwith %}
             {% empty %}
-                <tr><td colspan="6">No active or upcoming schedules.</td></tr>
+                <tr>
+                    <td colspan="6" style="text-align: center; color: gray;">
+                        No active or upcoming schedules.
+                    </td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
