@@ -45,6 +45,8 @@ def reset_access_and_restart():
             logger.error(f"[Scheduler][Error] Failed to restart container {container.container_id}: {e}")
 
 def schedule_all_containers(scheduler):
+    schedules = ContainerSchedule.objects.filter(active=True)
+    logger.info(f"[Scheduler] Found {schedules.count()} active schedules")
     now = timezone.now()
 
     for schedule in ContainerSchedule.objects.filter(active=True):
