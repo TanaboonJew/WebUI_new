@@ -134,6 +134,41 @@
             </div>
         </div>
     </div>-->
+
+    <h3>Upcoming Container Schedules</h3>
+    <table>
+    <thead>...</thead>
+        <tbody>
+            {% for item in upcoming_schedules %}
+                {% with schedule=item.schedule %}
+                    <tr style="
+                        {% if item.remaining.total_seconds > 3600 %}
+                        background-color: lightgreen;
+                        {% elif item.remaining.total_seconds > 600 %}
+                        background-color: yellow;
+                        {% else %}
+                        background-color: lightcoral;
+                        {% endif %}
+                    ">
+                        <td>{{ schedule.container.user.username }}</td>
+                        <td>{{ schedule.container.container_id }}</td>
+                        <td>{{ schedule.start_datetime|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ schedule.end_datetime|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ schedule.container.status }}</td>
+                        <td>
+                            {% if item.remaining.total_seconds > 0 %}
+                                {{ item.remaining|timesince }} left
+                            {% else %}
+                                Active now
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endwith %}
+            {% empty %}
+                <tr><td colspan="6">No active or upcoming schedules.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% if messages %}
 <script>

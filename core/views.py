@@ -364,6 +364,25 @@ def ai_dashboard(request):
 
                     messages.success(request, "Model uploaded successfully")
                     return redirect('ai-dashboard')
+                
+    now = timezone.now()
+    schedules = ContainerSchedule.objects.filter(
+        active=True
+    ).filter(
+        Q(start_datetime__lte=now, end_datetime__gte=now) |  
+        Q(start_datetime__gt=now)                            
+    ).order_by('start_datetime').select_related('container', 'container__user')
+
+    schedule_with_remaining = []
+    for s in schedules:
+        if s.start_datetime > now:
+            remaining = s.start_datetime - now
+        else:
+            remaining = timedelta(seconds=0)
+        schedule_with_remaining.append({
+            'schedule': s,
+            'remaining': remaining,
+        })
 
     return render(request, 'core/ai_dashboard.html', {
         'models': models,
@@ -372,6 +391,7 @@ def ai_dashboard(request):
         'jupyter_url': jupyter_url,
         'container_status': container_status,
         'container': user_container,
+        'upcoming_schedules': schedule_with_remaining,
     })
 
 @role_verified_required
