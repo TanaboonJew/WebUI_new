@@ -129,8 +129,7 @@
                                         <span class="text-info"><i class="fas fa-clock"></i> Upcoming</span>
                                     {% else %}
                                         <span class="text-success">
-                                            <i class="fas fa-play"></i>
-                                            {{ item.time_until_end|timesince }} left
+                                            <i class="fas fa-play"></i> {{ item.time_until_end|timesince }} left
                                         </span>
                                     {% endif %}
                                 </td>

@@ -385,12 +385,10 @@ def ai_dashboard(request):
         else:
             remaining = timedelta(seconds=0)
             is_upcoming = False
-            time_until_end = s.end_datetime - now
-
+            time_until_end = s.end_datetime
         schedule_with_remaining.append({
             'schedule': s,
             'remaining': remaining,
-            'remaining_as_datetime': now - remaining,
             'is_upcoming': is_upcoming,
             'time_until_end': time_until_end,
         })
