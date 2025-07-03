@@ -47,17 +47,19 @@ def reset_access_and_restart():
 def schedule_all_containers(scheduler):
     schedules = ContainerSchedule.objects.filter(active=True)
     logger.info(f"[Scheduler] Found {schedules.count()} active schedules")
-    now = timezone.now()
 
-    for schedule in ContainerSchedule.objects.filter(active=True):
-        if schedule.start_datetime <= now or schedule.end_datetime <= now:
-            logger.warning(f"[Scheduler] Skipping past schedule for user {schedule.container.user.username}")
-            continue
+    from django.utils.timezone import now
 
+    for schedule in schedules:
         container = schedule.container
         user = container.user
 
         if user.role not in ['doctoral', 'teacher']:
+            logger.warning(f"[Scheduler] Skipping schedule for user {user.username} with role {user.role}")
+            continue
+
+        if schedule.start_datetime < now():
+            logger.warning(f"[Scheduler] Skipping past schedule for user {user.username} starting at {schedule.start_datetime}")
             continue
 
         container_id = container.container_id
