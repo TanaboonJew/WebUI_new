@@ -94,7 +94,6 @@
                 <thead class="table-light">
                     <tr>
                         <th>User</th>
-                        <th>Container ID</th>
                         <th>Start Time</th>
                         <th>End Time</th>
                         <th>Status</th>
@@ -114,9 +113,8 @@
                                 {% endif %}
                             ">
                                 <td>{{ schedule.container.user.username }}</td>
-                                <td><code>{{ schedule.container.container_id }}</code></td>
-                                <td>{{ schedule.start_datetime|date:"Y-m-d H:i:s" }}</td>
-                                <td>{{ schedule.end_datetime|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ schedule.start_datetime|date:"Y-m-d H:i" }}</td>
+                                <td>{{ schedule.end_datetime|date:"Y-m-d H:i" }}</td>
                                 <td>
                                     {% if schedule.container.status == 'running' %}
                                         <span class="badge bg-success">Running</span>
@@ -127,10 +125,13 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if item.remaining.total_seconds > 0 %}
-                                        {{ item.remaining_as_datetime|timesince }} left
+                                    {% if item.is_upcoming %}
+                                        <span class="text-info"><i class="fas fa-clock"></i> Upcoming</span>
                                     {% else %}
-                                        <span class="text-success"><i class="fas fa-play"></i> Active now</span>
+                                        <span class="text-success">
+                                            <i class="fas fa-play"></i>
+                                            {{ item.time_until_end|timesince }} left
+                                        </span>
                                     {% endif %}
                                 </td>
                             </tr>

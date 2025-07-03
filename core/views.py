@@ -373,19 +373,26 @@ def ai_dashboard(request):
         active=True
     ).filter(
         Q(start_datetime__lte=now, end_datetime__gte=now) |  
-        Q(start_datetime__gt=now)                            
+        Q(start_datetime__gt=now)
     ).order_by('start_datetime').select_related('container', 'container__user')
 
     schedule_with_remaining = []
     for s in schedules:
         if s.start_datetime > now:
             remaining = s.start_datetime - now
+            is_upcoming = True
+            time_until_end = None
         else:
             remaining = timedelta(seconds=0)
+            is_upcoming = False
+            time_until_end = s.end_datetime - now
+
         schedule_with_remaining.append({
             'schedule': s,
             'remaining': remaining,
             'remaining_as_datetime': now - remaining,
+            'is_upcoming': is_upcoming,
+            'time_until_end': time_until_end,
         })
 
     return render(request, 'core/ai_dashboard.html', {
