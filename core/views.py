@@ -20,6 +20,8 @@ from django.utils.dateparse import parse_datetime
 from datetime import datetime
 from .scheduler import reload_schedules
 from datetime import timedelta
+from django.db.models import Q
+
 
 def home(request):
     """Home page view that shows different content based on authentication status"""
