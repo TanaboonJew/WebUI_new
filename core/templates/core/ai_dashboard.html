@@ -81,7 +81,70 @@
             </div>
         </div>
         
-        <!-- Model Upload Section -->
+    </div>
+    
+    <h3 class="mt-5">Upcoming Container Schedules</h3>
+
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <i class="fas fa-calendar-alt"></i> Schedule Overview
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Container ID</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Status</th>
+                        <th>Time Remaining</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in upcoming_schedules %}
+                        {% with schedule=item.schedule %}
+                            {% if item.remaining.total_seconds > 3600 %}
+                                {% set row_color = "table-success" %}
+                            {% elif item.remaining.total_seconds > 600 %}
+                                {% set row_color = "table-warning" %}
+                            {% else %}
+                                {% set row_color = "table-danger" %}
+                            {% endif %}
+                            <tr class="{{ row_color }}">
+                                <td>{{ schedule.container.user.username }}</td>
+                                <td><code>{{ schedule.container.container_id }}</code></td>
+                                <td>{{ schedule.start_datetime|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ schedule.end_datetime|date:"Y-m-d H:i:s" }}</td>
+                                <td>
+                                    {% if schedule.container.status == 'running' %}
+                                        <span class="badge bg-success">Running</span>
+                                    {% elif schedule.container.status == 'stopped' %}
+                                        <span class="badge bg-danger">Stopped</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.remaining.total_seconds > 0 %}
+                                        <i class="far fa-clock"></i> {{ item.remaining|timesince }} left
+                                    {% else %}
+                                        <span class="text-success"><i class="fas fa-play"></i> Active now</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No active or upcoming schedules.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Model Upload Section -->
         <!--
         <div class="col-md-6">
             <div class="card">
@@ -100,8 +163,7 @@
             </div>
         </div>
         -->
-    </div>
-    
+
     <!-- Model List 
     <div class="card mt-4">
         <div class="card-header bg-secondary text-white">
@@ -135,53 +197,6 @@
         </div>
     </div>-->
 
-    <h3>Upcoming Container Schedules</h3>
-    <table border="1" cellpadding="6">
-        <thead>
-            <tr>
-                <th>User</th>
-                <th>Container ID</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Status</th>
-                <th>Time Remaining</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in upcoming_schedules %}
-                {% with schedule=item.schedule %}
-                    <tr style="
-                        {% if item.remaining.total_seconds > 3600 %}
-                            background-color: lightgreen;
-                        {% elif item.remaining.total_seconds > 600 %}
-                            background-color: yellow;
-                        {% else %}
-                            background-color: lightcoral;
-                        {% endif %}
-                    ">
-                        <td>{{ schedule.container.user.username }}</td>
-                        <td>{{ schedule.container.container_id }}</td>
-                        <td>{{ schedule.start_datetime|date:"Y-m-d H:i:s" }}</td>
-                        <td>{{ schedule.end_datetime|date:"Y-m-d H:i:s" }}</td>
-                        <td>{{ schedule.container.status }}</td>
-                        <td>
-                            {% if item.remaining.total_seconds > 0 %}
-                                {{ item.remaining|timesince }} left
-                            {% else %}
-                                Active now
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endwith %}
-            {% empty %}
-                <tr>
-                    <td colspan="6" style="text-align: center; color: gray;">
-                        No active or upcoming schedules.
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 {% if messages %}
 <script>
