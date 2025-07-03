@@ -6,7 +6,7 @@
 
     <div class="row">
         <!-- Jupyter Notebook Section -->
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <span>Jupyter Notebook</span>
@@ -82,6 +82,7 @@
         </div>
         
         <!-- Model Upload Section -->
+        <!--
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-info text-white">
@@ -98,53 +99,41 @@
                 </div>
             </div>
         </div>
+        -->
     </div>
     
-    <!-- Model List -->
+    <!-- Model List 
     <div class="card mt-4">
         <div class="card-header bg-secondary text-white">
-            Your AI Models
+            Sched
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table>
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Framework</th>
-                            <th>Filename</th>
-                            <th>Size</th>
-                            <th>Uploaded</th>
-                            <th>Actions</th>
+                        <th>User</th>
+                        <th>Container</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Active</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for model in models %}
+                        {% for schedule in schedules %}
                         <tr>
-                            <td>{{ model.name }}</td>
-                            <td><span class="badge bg-primary">{{ model.get_framework_display }}</span></td>
-                            <td>{{ model.filename }}</td>
-                            <td>{{ model.model_file.size|filesizeformat }}</td>
-                            <td>{{ model.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>
-                                <a href="{{ model.model_file.url }}" class="btn btn-sm btn-info" download>
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                                <a href="{% url 'delete-model' model.id %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i> Delete
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center">No models uploaded yet</td>
+                        <td>{{ schedule.container.user.username }}</td>
+                        <td>{{ schedule.container.id }}</td>
+                        <td>{{ schedule.start_datetime }}</td>
+                        <td>{{ schedule.end_datetime }}</td>
+                        <td>{{ schedule.active }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
+    </div>-->
 </div>
 {% if messages %}
 <script>

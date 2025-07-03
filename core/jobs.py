@@ -45,7 +45,13 @@ def reset_access_and_restart():
             logger.error(f"[Scheduler][Error] Failed to restart container {container.container_id}: {e}")
 
 def schedule_all_containers(scheduler):
+    now = timezone.now()
+
     for schedule in ContainerSchedule.objects.filter(active=True):
+        if schedule.start_datetime <= now or schedule.end_datetime <= now:
+            logger.warning(f"[Scheduler] Skipping past schedule for user {schedule.container.user.username}")
+            continue
+
         container = schedule.container
         user = container.user
 
@@ -55,7 +61,6 @@ def schedule_all_containers(scheduler):
         container_id = container.container_id
         logger.info(f"Scheduling for user {user.username} from {schedule.start_datetime} to {schedule.end_datetime}")
 
-        # Schedule enforcement: allow access only to this user
         scheduler.add_job(
             stop_all_except,
             trigger=DateTrigger(run_date=schedule.start_datetime, timezone=timezone.get_current_timezone()),
@@ -64,7 +69,6 @@ def schedule_all_containers(scheduler):
             replace_existing=True
         )
 
-        # Schedule end: allow everyone back
         scheduler.add_job(
             reset_access_and_restart,
             trigger=DateTrigger(run_date=schedule.end_datetime, timezone=timezone.get_current_timezone()),
