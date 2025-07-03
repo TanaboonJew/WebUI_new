@@ -128,7 +128,7 @@
                                 </td>
                                 <td>
                                     {% if item.remaining.total_seconds > 0 %}
-                                        <i class="far fa-clock"></i> {{ item.remaining|timesince }} left
+                                        {{ item.remaining_as_datetime|timesince }} left
                                     {% else %}
                                         <span class="text-success"><i class="fas fa-play"></i> Active now</span>
                                     {% endif %}

@@ -385,6 +385,7 @@ def ai_dashboard(request):
         schedule_with_remaining.append({
             'schedule': s,
             'remaining': remaining,
+            'remaining_as_datetime': now - remaining,
         })
 
     return render(request, 'core/ai_dashboard.html', {
