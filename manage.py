@@ -8,6 +8,13 @@ def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebUI.settings')
 
+    if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
+        import django
+        django.setup()
+
+        from core.scheduler import start_scheduler
+        start_scheduler()
+
     try:
         from django.core.management import execute_from_command_line
         execute_from_command_line(sys.argv)
@@ -17,15 +24,6 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-
-    # ✅ เรียก start_scheduler เฉพาะเมื่อใช้ runserver เท่านั้น
-    if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
-        import django
-        django.setup()
-
-        from core.scheduler import start_scheduler
-        start_scheduler()
-
 
 if __name__ == '__main__':
     main()
