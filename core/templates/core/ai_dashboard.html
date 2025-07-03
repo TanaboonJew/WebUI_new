@@ -104,14 +104,15 @@
                 <tbody>
                     {% for item in upcoming_schedules %}
                         {% with schedule=item.schedule %}
-                            {% if item.remaining.total_seconds > 3600 %}
-                                {% set row_color = "table-success" %}
-                            {% elif item.remaining.total_seconds > 600 %}
-                                {% set row_color = "table-warning" %}
-                            {% else %}
-                                {% set row_color = "table-danger" %}
-                            {% endif %}
-                            <tr class="{{ row_color }}">
+                            <tr class="
+                                {% if item.remaining.total_seconds > 3600 %}
+                                    table-success
+                                {% elif item.remaining.total_seconds > 600 %}
+                                    table-warning
+                                {% else %}
+                                    table-danger
+                                {% endif %}
+                            ">
                                 <td>{{ schedule.container.user.username }}</td>
                                 <td><code>{{ schedule.container.container_id }}</code></td>
                                 <td>{{ schedule.start_datetime|date:"Y-m-d H:i:s" }}</td>
