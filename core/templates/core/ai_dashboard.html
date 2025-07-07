@@ -20,62 +20,63 @@
                     {% endif %}
                     </span>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="action-area" data-accessible="{{ user.is_accessible|yesno:"ture,false" }}">
+
                     {% if container.status == 'running' or container.status == 'exited'%}
-                    <div class="alert alert-success">
-                        {% if container.status == 'running'%}
-                            Notebook is running!<br>
-                        {% endif %}
+                        <div class="alert alert-success">
+                            {% if container.status == 'running'%}
+                                Notebook is running!<br>
+                            {% endif %}
+                            {% if jupyter_token %}
+                                <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
+                            {% endif %}
+                            <strong>Container ID:</strong> <code>{{ container.container_id }}</code><br>
+                            {% if container.framework %}
+                                <strong>Framework:</strong> <code>{{ container.framework|title }}</code>
+                            {% endif %}
+                        </div>
+
                         {% if jupyter_token %}
-                            <strong>Token:</strong> <code>{{ jupyter_token }}</code><br>
+                            <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
+                                <i class="fas fa-external-link-alt"></i> Open Notebook
+                            </a>
                         {% endif %}
-                        <strong>Container ID:</strong> <code>{{ container.container_id }}</code><br>
-                        {% if container.framework %}
-                        <strong>Framework:</strong> <code>{{ container.framework|title }}</code>
-                        {% endif %}
-                    </div>
-                    {% if jupyter_token %}
-                        <a href="{{ jupyter_url }}" target="_blank" class="btn btn-success">
-                            <i class="fas fa-external-link-alt"></i> Open Notebook
-                        </a>
-                    {% endif %}
-   
-                    <form method="post" class="d-inline">
-                        {% csrf_token %}
-                        {% if container.status == 'exited' %}    
-                            <button type="submit" name="start_jupyter" class="btn btn-success">
-                                <i class="fas fa-stop"></i> Start Notebook
-                            </button>   
-                        {% elif container.status == 'running' %}
-                            <button type="submit" name="stop_jupyter" class="btn btn-danger">
-                                <i class="fas fa-stop"></i> Stop Notebook
+
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            {% if container.status == 'exited' %}    
+                                <button type="submit" name="start_jupyter" class="btn btn-success">
+                                    <i class="fas fa-stop"></i> Start Notebook
+                                </button>   
+                            {% elif container.status == 'running' %}
+                                <button type="submit" name="stop_jupyter" class="btn btn-danger">
+                                    <i class="fas fa-stop"></i> Stop Notebook
+                                </button>
+                            {% endif %}
+                            <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
+                                <i class="fas fa-trash"></i> Delete Notebook
                             </button>
-                        {% endif %}
-                        <button type="submit" name="delete_jupyter" class="btn btn-outline-danger">
-                            <i class="fas fa-trash"></i> Delete Notebook
-                        </button>
-                    </form>
+                        </form>
 
                     {% elif container.status == 'running' %}
-                    <div class="alert alert-warning">
-                        Notebook is running but token or URL not available.
-                    </div>
-                    {% else %}
-
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="framework" class="form-label">Select Framework</label>
-                            <select name="framework" id="framework" class="form-control">
-                                <option value="" disabled selected>-- Select Framework --</option>
-                                <option value="tensorflow">TensorFlow</option>
-                                <option value="pytorch">PyTorch</option>
-                            </select>
+                        <div class="alert alert-warning">
+                            Notebook is running but token or URL not available.
                         </div>
-                        <button type="submit" name="start_jupyter" class="btn btn-primary">
-                            <i class="fas fa-rocket"></i> Launch Notebook
-                        </button>
-                    </form>
+                    {% else %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="framework" class="form-label">Select Framework</label>
+                                <select name="framework" id="framework" class="form-control">
+                                    <option value="" disabled selected>-- Select Framework --</option>
+                                    <option value="tensorflow">TensorFlow</option>
+                                    <option value="pytorch">PyTorch</option>
+                                </select>
+                            </div>
+                            <button type="submit" name="start_jupyter" class="btn btn-primary">
+                                <i class="fas fa-rocket"></i> Launch Notebook
+                            </button>
+                        </form>
                     {% endif %}
                 </div>
             </div>
@@ -210,6 +211,27 @@
             setTimeout(function () {
                 location.reload();
             }, 1000);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const actionArea = document.getElementById('action-area');
+        const isAccessible = actionArea.dataset.accessible === 'true';
+
+        if (!isAccessible) {
+            actionArea.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    alert('Not available at this time');
+                });
+            });
+
+            actionArea.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    alert('Not available at this time');
+                });
+            });
         }
     });
 </script>

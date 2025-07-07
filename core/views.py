@@ -282,6 +282,10 @@ def ai_dashboard(request):
         container_status = 'not_found' 
 
     if request.method == 'POST':
+        if not request.user.is_accessible:
+            messages.error(request, "Not available at this time")
+            return redirect('ai-dashboard')
+        
         if 'start_jupyter' in request.POST:
             framework = request.POST.get('framework', '').strip().lower()
             if not framework:
