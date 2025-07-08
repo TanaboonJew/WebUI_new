@@ -380,24 +380,42 @@ def ai_dashboard(request):
         Q(start_datetime__gt=now)
     ).order_by('start_datetime').select_related('container', 'container__user')
 
+    def format_timedelta(td):
+        total_seconds = int(td.total_seconds())
+        if total_seconds <= 0:
+            return "0s"
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        parts = []
+        if hours > 0:
+            parts.append(f"{hours}h")
+        if minutes > 0:
+            parts.append(f"{minutes}m")
+        if seconds > 0:
+            parts.append(f"{seconds}s")
+        return ' '.join(parts)
+
     schedule_with_remaining = []
     for s in schedules:
         if s.start_datetime > now:
             remaining = s.start_datetime - now
             is_upcoming = True
             time_until_end = None
+            time_until_end_str = None
         else:
             remaining = timedelta(seconds=0)
             is_upcoming = False
             time_until_end = s.end_datetime - now
             if time_until_end.total_seconds() < 0:
                 time_until_end = timedelta(seconds=0)
+            time_until_end_str = format_timedelta(time_until_end)
 
         schedule_with_remaining.append({
             'schedule': s,
             'remaining': remaining,
             'is_upcoming': is_upcoming,
             'time_until_end': time_until_end,
+            'time_until_end_str': time_until_end_str,
         })
 
     return render(request, 'core/ai_dashboard.html', {
