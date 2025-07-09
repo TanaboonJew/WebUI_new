@@ -103,13 +103,17 @@ class DockerManager:
             if os.path.exists(path):
                 shutil.rmtree(path)
                 os.makedirs(path, exist_ok=True)
+                
+    def _delete_user_workspace(self, user: CustomUser):
+        user_dir = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}_{user.username}')
+        if os.path.exists(user_dir):
+            shutil.rmtree(user_dir, ignore_errors=True)
 
     def create_container(self, user: CustomUser, image_name: str, container_type: str = 'default') -> Tuple[Optional[str], Optional[str]]:
         if not self.client:
             return None, None
         try:
             dirs = self._prepare_user_directories(user)
-            self._clear_user_mount_dirs(dirs)
             self._copy_user_uploaded_files(user, dirs)
 
             container_name = f"{container_type}_{user.id}_{user.username}"
@@ -118,9 +122,13 @@ class DockerManager:
                 port = self._get_available_port()
                 token = self._generate_jupyter_token()
 
+                uid = 1001
+                gid = 1002
+
                 container = self.client.containers.run(
                     image=f"{image_name}:latest",
                     name=container_name,
+                    user=f"{uid}:{gid}",
                     volumes={
                         dirs['jupyter']: {'bind': '/home/user/work', 'mode': 'rw'},
                         dirs['models']: {'bind': '/home/user/models', 'mode': 'rw'},
@@ -134,7 +142,7 @@ class DockerManager:
                     detach=True,
                     mem_limit=f"{user.mem_limit}m",                  # e.g. 8192 MB
                     memswap_limit=f"{user.memswap_limit}m",          # e.g. 12288 MB
-                    nano_cpus=int(user.cpu_limit * 1e9),                             # e.g. 3.0 (strict)
+                    nano_cpus=int(user.cpu_limit * 1e9),             # e.g. 3.0 (strict)
                     runtime='nvidia' if user.gpu_access else None
                 )
 
@@ -190,6 +198,9 @@ class DockerManager:
 
             elif action == 'delete':
                 container.remove(force=True)
+                
+                self._delete_user_workspace(user)
+                
                 if db_container:
                     db_container.delete()
                 logger.info(f"Deleted container {container_name}")
