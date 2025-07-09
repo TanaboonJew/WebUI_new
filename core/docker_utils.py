@@ -122,13 +122,9 @@ class DockerManager:
                 port = self._get_available_port()
                 token = self._generate_jupyter_token()
 
-                uid = 1001
-                gid = 1002
-
                 container = self.client.containers.run(
                     image=f"{image_name}:latest",
                     name=container_name,
-                    user=f"{uid}:{gid}",
                     volumes={
                         dirs['jupyter']: {'bind': '/home/user/work', 'mode': 'rw'},
                         dirs['models']: {'bind': '/home/user/models', 'mode': 'rw'},
