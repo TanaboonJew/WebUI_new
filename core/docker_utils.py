@@ -99,7 +99,7 @@ class DockerManager:
             return None, str(e)
 
     def _clear_user_mount_dirs(self, dirs: Dict[str, str]):
-        for path in [dirs['data'], dirs['models']]:
+        for path in [dirs['data'], dirs['models'], dirs['work']]:
             if os.path.exists(path):
                 shutil.rmtree(path)
                 os.makedirs(path, exist_ok=True)
@@ -122,7 +122,7 @@ class DockerManager:
                     image=f"{image_name}:latest",
                     name=container_name,
                     volumes={
-                        dirs['jupyter']: {'bind': '/home/user/work', 'mode': 'rw'},
+                        dirs['work']: {'bind': '/home/user/work', 'mode': 'rw'},
                         dirs['models']: {'bind': '/home/user/models', 'mode': 'rw'},
                         dirs['data']: {'bind': '/home/user/data', 'mode': 'rw'}
                     },
