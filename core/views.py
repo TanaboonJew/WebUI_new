@@ -276,6 +276,8 @@ def ai_dashboard(request):
 
         except docker.errors.NotFound:
             container_status = 'not_found' 
+            if user_container:
+                user_container.delete()
             user_container = None  
 
     else:
