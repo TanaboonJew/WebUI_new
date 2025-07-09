@@ -16,6 +16,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
 from .decorators import role_verified_required
 import os
+import docker
 from django.utils.dateparse import parse_datetime
 from datetime import datetime
 from .scheduler import reload_schedules
