@@ -631,7 +631,7 @@ def superuser_dashboard(request):
             'ram_limit_mb': mem_limit_mb,
             'ram_usage_percent': ram_usage_percent,
             'updated_at': timezone.now(),
-            'container': container,
+            'container': django_container,
         }
 
         usages.append(usage)
