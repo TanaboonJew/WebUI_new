@@ -602,8 +602,11 @@ def superuser_dashboard(request):
         disk_usage_str = "N/A"
         if container and container.status == 'running':
             try:
-                du_output = container.exec_run("du -sh /", user="root")
-                disk_usage_str = du_output.output.decode().strip().split()[0]
+                result = container.exec_run("du -sh /", user="root")
+                if result.exit_code == 0:
+                    disk_usage_str = result.output.decode().strip().split()[0]
+                else:
+                    print(f"du command failed with exit code {result.exit_code}")
             except Exception as e:
                 print(f"[Disk] Error for {container.container_id}: {e}")
 
@@ -611,7 +614,6 @@ def superuser_dashboard(request):
             'user': user,
             'docker_status': docker_status,
             'jupyter_status': jupyter_status,
-            'disk_usage': 10,
             'cpu_usage': cpu_usage,
             'gpu_memory_mb': gpu_memory_mb,
             'gpu_memory_percent': gpu_memory_percent,
