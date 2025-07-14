@@ -13,43 +13,33 @@ except DockerException:
 
 
 def get_system_stats():
-    try:
-        cpu_percent = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+    cpu_percent = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
 
-        try:
-            gpu_stats = get_gpu_stats() if docker_client and docker_client.info().get('Runtimes', {}).get('nvidia') else None
-        except Exception as e:
-            print(f"GPU stats error: {e}")
-            gpu_stats = None
+    stats = {
+        'cpu': {
+            'percent': cpu_percent,
+            'cores': psutil.cpu_count(logical=False),
+            'threads': psutil.cpu_count(logical=True)
+        },
+        'memory': {
+            'total': memory.total,
+            'available': memory.available,
+            'used': memory.used,
+            'percent': memory.percent
+        },
+        'disk': {
+            'total': disk.total,
+            'used': disk.used,
+            'free': disk.free,
+            'percent': disk.percent
+        },
+        'gpu': get_gpu_stats() if docker_client and docker_client.info().get('Runtimes', {}).get('nvidia') else None
+    }
 
-        stats = {
-            'cpu': {
-                'percent': cpu_percent,
-                'cores': psutil.cpu_count(logical=False),
-                'threads': psutil.cpu_count(logical=True)
-            },
-            'memory': {
-                'total': memory.total,
-                'available': memory.available,
-                'used': memory.used,
-                'percent': memory.percent
-            },
-            'disk': {
-                'total': disk.total,
-                'used': disk.used,
-                'free': disk.free,
-                'percent': disk.percent
-            },
-            'gpu': gpu_stats
-        }
+    return stats
 
-        return stats
-
-    except Exception as e:
-        print(f"System stats error: {e}")
-        return {}
 
 def get_gpu_stats():
     try:
