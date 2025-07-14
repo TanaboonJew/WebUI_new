@@ -603,12 +603,15 @@ def superuser_dashboard(request):
         if container and container.status == 'running':
             try:
                 result = container.exec_run("du -sh /", user="root")
+                print(f"Exec run exit code: {result.exit_code}")
+                print(f"Exec run output: {result.output.decode()}")
                 if result.exit_code == 0:
                     disk_usage_str = result.output.decode().strip().split()[0]
                 else:
                     print(f"du command failed with exit code {result.exit_code}")
             except Exception as e:
                 print(f"[Disk] Error for {container.container_id}: {e}")
+
 
         usage = {
             'user': user,
