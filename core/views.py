@@ -201,7 +201,7 @@ def public_dashboard(request):
                 disk_percent = float(stats['disk'].get('percent', 0))
             except (ValueError, TypeError):
                 disk_percent = 0
-            stats['disk']['free_percent'] = 100 - disk_percent
+            stats['disk']['free_percent'] = round(100 - disk_percent, 1)
         
         context = {
             'stats': stats,
