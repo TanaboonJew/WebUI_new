@@ -598,6 +598,14 @@ def superuser_dashboard(request):
         mem_limit_mb = user.mem_limit  # already in MB
         used_ram_mb = round(memory_usage / (1024 * 1024), 2)
         ram_usage_percent = round((used_ram_mb / mem_limit_mb) * 100, 1) if mem_limit_mb > 0 else 0
+        
+        disk_usage_str = "N/A"
+        if container and container.status == 'running':
+            try:
+                du_output = container.exec_run("du -sh /", user="root")
+                disk_usage_str = du_output.output.decode().strip().split()[0]
+            except Exception as e:
+                print(f"[Disk] Error for {container.container_id}: {e}")
 
         usage = {
             'user': user,
@@ -612,6 +620,7 @@ def superuser_dashboard(request):
             'ram_usage_percent': ram_usage_percent,
             'updated_at': timezone.now(),
             'container': container,
+            'disk_usage': disk_usage_str,
         }
 
         usages.append(usage)

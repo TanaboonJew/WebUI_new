@@ -24,6 +24,7 @@ tr.updated {
           <th>Memory Usage</th>
           <th>CPU (%)</th>
           <th>GPU Memory (MB)</th>
+          <th>Disk Usage</th>
           <th>Last Updated</th>
           <th>Allocate</th>
           <th>Pause</th>
@@ -84,6 +85,9 @@ tr.updated {
                 {{ usage.gpu_memory_mb }} MB
               </span>
             </div>
+          </td>
+          <td>
+            {{ usage.disk_usage }}
           </td>
           <td>{{ usage.updated_at|date:"Y-m-d H:i:s" }}</td>
           <td>
