@@ -697,6 +697,9 @@ def allocate_resources(request, user_id):
 
     user = get_object_or_404(CustomUser, id=user_id)
 
+    MAX_RAM_MB = 256 * 1024
+    MAX_CPU_CORES = 64
+
     if request.method == 'POST':
         mem_limit = request.POST.get('mem_limit')
         memswap_limit = request.POST.get('memswap_limit')
@@ -713,16 +716,27 @@ def allocate_resources(request, user_id):
                     'user_obj': user,
                     'error': 'RAM Swap Limit ต้องไม่น้อยกว่า RAM Limit'
                 })
-    
-            user.mem_limit = int(mem_limit)
-            user.memswap_limit = int(memswap_limit)
-            user.cpu_limit = int(cpu_limit)
+
+            if mem_limit_int > MAX_RAM_MB:
+                return render(request, 'core/allocate_resources.html', {
+                    'user_obj': user,
+                    'error': 'RAM Limit ต้องไม่เกิน 256 GB'
+                })
+
+            if cpu_limit_int > MAX_CPU_CORES:
+                return render(request, 'core/allocate_resources.html', {
+                    'user_obj': user,
+                    'error': 'CPU Limit ต้องไม่เกิน 64 cores'
+                })
+
+            user.mem_limit = mem_limit_int
+            user.memswap_limit = memswap_limit_int
+            user.cpu_limit = cpu_limit_int
             user.gpu_access = gpu_access
             user.save()
-            print("Saved successfully")
             return redirect('superuser-dashboard')
+
         except ValueError as e:
-            print("ValueError:", e)
             return render(request, 'core/allocate_resources.html', {
                 'user_obj': user,
                 'error': 'Invalid input. Please enter numbers only.'
