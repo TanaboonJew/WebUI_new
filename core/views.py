@@ -592,14 +592,20 @@ def superuser_dashboard(request):
             gpu_memory_mb = 0
             gpu_memory_percent = 0
 
+        cpu_limit = user.cpu_limit
+        used_cores = round(cpu_usage * cpu_limit / 100, 2)
+
         usage = {
+            'id': user.id,
             'user': user,
             'docker_status': docker_status,
             'jupyter_status': jupyter_status,
             'disk_usage': 10,
             'cpu_usage': cpu_usage,
-            'gpu_memory_mb': gpu_memory_mb,        
-            'gpu_memory_percent': gpu_memory_percent, 
+            'cpu_limit': cpu_limit,
+            'used_cores': used_cores,
+            'gpu_memory_mb': gpu_memory_mb,
+            'gpu_memory_percent': gpu_memory_percent,
             'updated_at': timezone.now(),
             'container': container,
         }

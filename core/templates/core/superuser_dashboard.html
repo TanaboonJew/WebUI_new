@@ -43,12 +43,12 @@ tr.updated {
           <td>
             <div class="progress" style="height: 20px; position: relative;">
               <div id="cpu-progress-{{ usage.id }}" class="progress-bar 
-                  {% if usage.cpu_usage > 80 %}bg-danger{% else %}bg-success{% endif %}" 
+                  {% if usage.cpu_usage > 80 %}bg-danger{% elif usage.cpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
                   role="progressbar" 
                   style="width: {{ usage.cpu_usage }}%;">
               </div>
-              <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold;">
-                {{ usage.cpu_usage }}%
+              <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-weight: bold; font-size: 0.9em;">
+                {{ usage.used_cores }} / {{ usage.cpu_limit }} cores ({{ usage.cpu_usage|floatformat:1 }}%)
               </span>
             </div>
           </td>
