@@ -5,5 +5,4 @@ websocket_urlpatterns = [
     re_path(r'ws/monitoring/$', consumers.MonitoringConsumer.as_asgi()),
     re_path(r'ws/container/(?P<container_id>\w+)/$', consumers.ContainerConsumer.as_asgi()),
     re_path(r'ws/usage/$', consumers.MonitoringConsumer.as_asgi()),
-    re_path(r'ws/monitoring/private/$', consumers.MonitoringConsumer.as_asgi()),
 ]

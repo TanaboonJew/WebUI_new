@@ -35,4 +35,16 @@
     <a href="{% url 'superuser-dashboard' %}" class="btn btn-secondary mt-3">Cancel</a>
   </form>
 </div>
+
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const memLimit = Number(document.querySelector('input[name="mem_limit"]').value);
+    const memswapLimit = Number(document.querySelector('input[name="memswap_limit"]').value);
+    if (memswapLimit < memLimit) {
+      e.preventDefault();
+      alert('RAM Swap Limit ต้องไม่น้อยกว่า RAM Limit');
+    }
+  });
+</script>
+
 {% endblock %}

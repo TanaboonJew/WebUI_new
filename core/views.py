@@ -702,9 +702,18 @@ def allocate_resources(request, user_id):
         memswap_limit = request.POST.get('memswap_limit')
         cpu_limit = request.POST.get('cpu_limit')
         gpu_access = request.POST.get('gpu_access') == 'on'
-        print(mem_limit, memswap_limit, cpu_limit, gpu_access)
 
         try:
+            mem_limit_int = int(mem_limit)
+            memswap_limit_int = int(memswap_limit)
+            cpu_limit_int = int(cpu_limit)
+
+            if memswap_limit_int < mem_limit_int:
+                return render(request, 'core/allocate_resources.html', {
+                    'user_obj': user,
+                    'error': 'RAM Swap Limit ต้องไม่น้อยกว่า RAM Limit'
+                })
+    
             user.mem_limit = int(mem_limit)
             user.memswap_limit = int(memswap_limit)
             user.cpu_limit = int(cpu_limit)
