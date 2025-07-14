@@ -180,8 +180,8 @@
                 <div class="card" style="height: 300px;">
                     <div class="card-header bg-info text-white">
                         Disk Usage
-                        <p>Used: {{ stats.disk.percent }}%</p>
-                        <p>Free: {{ stats.disk.free_percent }}%</p>
+                        <p>Used: {{ stats.disk.percent|default:"0.0" }}%</p>
+                        <p>Free: {{ stats.disk.free_percent|default:"0.0" }}%</p>
                     </div>
                     <div class="card-body">
                         <div class="row">

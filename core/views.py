@@ -203,6 +203,7 @@ def public_dashboard(request):
                 disk_percent = 0
             stats['disk']['free_percent'] = round(100 - disk_percent, 1)
         
+        print("DEBUG:", stats)
         context = {
             'stats': stats,
             'websocket_url': f"ws://{request.get_host()}/ws/monitoring/",
