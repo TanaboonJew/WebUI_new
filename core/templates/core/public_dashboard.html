@@ -180,6 +180,8 @@
                 <div class="card" style="height: 300px;">
                     <div class="card-header bg-info text-white">
                         Disk Usage
+                        <p>Used: {{ stats.disk.percent }}%</p>
+                        <p>Free: {{ stats.disk.free_percent }}%</p>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -262,7 +264,7 @@ let diskChart = new Chart(diskCtx, {
     data: {
         labels: ['Used', 'Free'],
         datasets: [{
-            data: [{{ stats.disk.percent|default:0 }}, {{ stats.disk.free_percent|default:100 }}],
+            data: [{{ stats.disk.percent|default:0|floatformat:"2" }}, {{ stats.disk.free_percent|default:100|floatformat:"2" }}],
             backgroundColor: [
                 'rgba(54, 162, 235, 0.7)',
                 'rgba(238, 20, 20, 0.5)'

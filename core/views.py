@@ -197,7 +197,10 @@ def public_dashboard(request):
         
         # Calculate free disk percentage
         if stats and 'disk' in stats:
-            disk_percent = stats['disk'].get('percent', 0)
+            try:
+                disk_percent = float(stats['disk'].get('percent', 0))
+            except (ValueError, TypeError):
+                disk_percent = 0
             stats['disk']['free_percent'] = 100 - disk_percent
         
         context = {
