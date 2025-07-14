@@ -196,14 +196,15 @@ def public_dashboard(request):
         stats = get_system_stats()
         
         # Calculate free disk percentage
+        print("DEBUG stats['disk'] before:", stats.get('disk'))
         if stats and 'disk' in stats:
             try:
                 disk_percent = float(stats['disk'].get('percent', 0))
             except (ValueError, TypeError):
                 disk_percent = 0
             stats['disk']['free_percent'] = round(100 - disk_percent, 1)
-        
-        print("DEBUG:", stats)
+            print("DEBUG stats['disk'] after:", stats['disk'])
+
         context = {
             'stats': stats,
             'websocket_url': f"ws://{request.get_host()}/ws/monitoring/",
