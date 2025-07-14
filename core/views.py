@@ -571,21 +571,41 @@ def superuser_dashboard(request):
     usages = []
 
     MAX_GPU_MEMORY_MB = 81559 
+    docker_client = docker.from_env()
 
     for user in users:
         if not isinstance(user, CustomUser):
             continue
 
-        container = DockerContainer.objects.filter(user=user).first()
+        django_container = DockerContainer.objects.filter(user=user).first()
 
-        if container:
-            stats = get_user_container_stats(container.container_id)
-            docker_status = container.status
-            jupyter_status = 'running' if container.status == 'running' else 'stopped'
-            cpu_usage = stats.get('cpu_percent', 0)
-            memory_usage = stats.get('memory_usage', 0)  # in bytes
-            gpu_memory_mb = stats.get('gpu_memory_mb', 0)
-            gpu_memory_percent = (gpu_memory_mb / MAX_GPU_MEMORY_MB) * 100 if MAX_GPU_MEMORY_MB > 0 else 0
+        if django_container:
+            try:
+                docker_container = docker_client.containers.get(django_container.container_id)
+                stats = get_user_container_stats(django_container.container_id)
+                docker_status = django_container.status
+                jupyter_status = 'running' if django_container.status == 'running' else 'stopped'
+                cpu_usage = stats.get('cpu_percent', 0)
+                memory_usage = stats.get('memory_usage', 0)
+                gpu_memory_mb = stats.get('gpu_memory_mb', 0)
+                gpu_memory_percent = (gpu_memory_mb / MAX_GPU_MEMORY_MB) * 100 if MAX_GPU_MEMORY_MB > 0 else 0
+
+                du_result = docker_container.exec_run("du -sh /", user="root")
+                if du_result.exit_code == 0:
+                    disk_usage_str = du_result.output.decode().strip().split()[0]
+                else:
+                    disk_usage_str = "N/A"
+                    print(f"du command failed with exit code {du_result.exit_code} for container {django_container.container_id}")
+
+            except Exception as e:
+                print(f"[Disk] Error for {django_container.container_id}: {e}")
+                docker_status = django_container.status
+                jupyter_status = 'stopped'
+                cpu_usage = 0
+                memory_usage = 0
+                gpu_memory_mb = 0
+                gpu_memory_percent = 0
+                disk_usage_str = "N/A"
         else:
             docker_status = 'stopped'
             jupyter_status = 'stopped'
@@ -593,30 +613,17 @@ def superuser_dashboard(request):
             memory_usage = 0
             gpu_memory_mb = 0
             gpu_memory_percent = 0
+            disk_usage_str = "N/A"
 
-        # Convert RAM usage to MB
-        mem_limit_mb = user.mem_limit  # already in MB
+        mem_limit_mb = user.mem_limit
         used_ram_mb = round(memory_usage / (1024 * 1024), 2)
         ram_usage_percent = round((used_ram_mb / mem_limit_mb) * 100, 1) if mem_limit_mb > 0 else 0
-        
-        disk_usage_str = "N/A"
-        if container and container.status == 'running':
-            try:
-                result = container.exec_run("du -sh /", user="root")
-                print(f"Exec run exit code: {result.exit_code}")
-                print(f"Exec run output: {result.output.decode()}")
-                if result.exit_code == 0:
-                    disk_usage_str = result.output.decode().strip().split()[0]
-                else:
-                    print(f"du command failed with exit code {result.exit_code}")
-            except Exception as e:
-                print(f"[Disk] Error for {container.container_id}: {e}")
-
 
         usage = {
             'user': user,
             'docker_status': docker_status,
             'jupyter_status': jupyter_status,
+            'disk_usage': disk_usage_str,
             'cpu_usage': cpu_usage,
             'gpu_memory_mb': gpu_memory_mb,
             'gpu_memory_percent': gpu_memory_percent,
@@ -625,7 +632,6 @@ def superuser_dashboard(request):
             'ram_usage_percent': ram_usage_percent,
             'updated_at': timezone.now(),
             'container': container,
-            'disk_usage': disk_usage_str,
         }
 
         usages.append(usage)
