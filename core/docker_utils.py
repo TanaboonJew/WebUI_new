@@ -122,9 +122,6 @@ class DockerManager:
                 port = self._get_available_port()
                 token = self._generate_jupyter_token()
 
-                user_uid = os.getuid()
-                user_gid = os.getgid()
-
                 container = self.client.containers.run(
                     image=f"{image_name}:latest",
                     name=container_name,
@@ -138,13 +135,13 @@ class DockerManager:
                         'JUPYTER_TOKEN': token,
                         'GRANT_SUDO': 'yes'
                     },
-                    user=f"{user_uid}:{user_gid}",
                     detach=True,
-                    mem_limit=f"{user.mem_limit}m",
-                    memswap_limit=f"{user.memswap_limit}m",
-                    nano_cpus=int(user.cpu_limit * 1e9),
+                    mem_limit=f"{user.mem_limit}m",                  # e.g. 8192 MB
+                    memswap_limit=f"{user.memswap_limit}m",          # e.g. 12288 MB
+                    nano_cpus=int(user.cpu_limit * 1e9),             # e.g. 3.0 (strict)
                     runtime='nvidia' if user.gpu_access else None
                 )
+
 
                 DockerContainer.objects.update_or_create(
                     user=user,
