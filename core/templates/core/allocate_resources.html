@@ -18,7 +18,7 @@
 
     <div class="form-group mt-2">
       <label>RAM Swap Limit (MB)</label>
-      <input type="number" name="memswap_limit" class="form-control" value="{{ user_obj.memswap_limit }}" required>
+      <input type="hidden" name="memswap_limit" id="memswap_limit" value="{{ user_obj.mem_limit }}">
     </div>
 
     <div class="form-group mt-2">
@@ -35,5 +35,16 @@
     <a href="{% url 'superuser-dashboard' %}" class="btn btn-secondary mt-3">Cancel</a>
   </form>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const memLimitInput = document.querySelector('input[name="mem_limit"]');
+    const memSwapLimitInput = document.querySelector('input[name="memswap_limit"]');
+
+    memLimitInput.addEventListener('input', function () {
+      memSwapLimitInput.value = memLimitInput.value;
+    });
+  });
+</script>
 
 {% endblock %}
