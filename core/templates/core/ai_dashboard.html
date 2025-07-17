@@ -128,7 +128,7 @@
                                 <td>
                                     {% if item.is_upcoming %}
                                         <span class="text-info">
-                                            <i class="fas fa-clock"></i> Upcoming (starts in {{ item.remaining|timesince }} )
+                                            <i class="fas fa-clock"></i> Upcoming (starts in {{ item.remaining_str|timesince }} )
                                         </span>
                                     {% else %}
                                         <span class="text-success">
