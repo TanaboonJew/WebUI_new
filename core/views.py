@@ -807,6 +807,23 @@ def create_schedule(request, user_id):
         start_dt = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
         end_dt = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
 
+        # เช็คว่าเวลาซ้ำกับตารางอื่นหรือไม่
+        overlapping = ContainerSchedule.objects.filter(
+            container=container,
+            active=True,
+        ).filter(
+            Q(start_datetime__lt=end_dt) & Q(end_datetime__gt=start_dt)
+        )
+
+        if overlapping.exists():
+            return render(request, 'core/schedule_form.html', {
+                'user': user,
+                'container': container,
+                'schedule': container.schedules.first(),
+                'error': 'ช่วงเวลานี้ถูกจองไปแล้ว กรุณาเลือกเวลาอื่น',
+            })
+
+        # ถ้าไม่ซ้อนให้บันทึกได้
         ContainerSchedule.objects.update_or_create(
             container=container,
             defaults={
@@ -815,16 +832,42 @@ def create_schedule(request, user_id):
                 'active': active,
             }
         )
-        
-        # เรียก reload scheduler job ใหม่
+
         reload_schedules()
 
         return redirect('superuser-dashboard')
 
     existing_schedule = container.schedules.first()
+    schedules = ContainerSchedule.objects.select_related('container__user').order_by('start_datetime')
+    now = timezone_now()
+
+    schedule_with_remaining = []
+    for s in schedules:
+        if s.start_datetime > now:
+            remaining = s.start_datetime - now
+            is_upcoming = True
+            time_until_end = None
+            remaining_str = format_timedelta(remaining)
+            time_until_end_str = None
+        else:
+            remaining = timedelta(seconds=0)
+            is_upcoming = False
+            time_until_end = s.end_datetime - now
+            if time_until_end.total_seconds() < 0:
+                time_until_end = timedelta(seconds=0)
+            time_until_end_str = format_timedelta(time_until_end)
+            remaining_str = None
+
+        schedule_with_remaining.append({
+            'schedule': s,
+            'remaining_str': remaining_str,
+            'is_upcoming': is_upcoming,
+            'time_until_end_str': time_until_end_str,
+        })
 
     return render(request, 'core/schedule_form.html', {
         'user': user,
         'container': container,
         'schedule': existing_schedule,
+        'upcoming_schedules': schedule_with_remaining,
     })

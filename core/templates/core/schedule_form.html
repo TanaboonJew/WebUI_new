@@ -45,5 +45,38 @@
 
         <button type="submit" class="btn btn-primary">บันทึก</button>
     </form>
+
+    <h4 class="mt-5">ช่วงเวลาที่ถูกจองโดยผู้ใช้งานทั้งหมด</h4>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>ผู้ใช้</th>
+                <th>วันที่</th>
+                <th>เวลาเริ่ม</th>
+                <th>เวลาสิ้นสุด</th>
+                <th>สถานะ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in upcoming_schedules %}
+                <tr>
+                    <td>{{ item.user.username }}</td>
+                    <td>{{ item.schedule.start_datetime|date:"Y-m-d" }}</td>
+                    <td>{{ item.schedule.start_datetime|time:"H:i" }}</td>
+                    <td>{{ item.schedule.end_datetime|time:"H:i" }}</td>
+                    <td>
+                        {% if item.is_upcoming %}
+                            <span class="badge bg-info">ยังไม่เริ่ม</span>
+                        {% elif item.time_until_end_str %}
+                            <span class="badge bg-success">กำลังใช้งาน</span>
+                        {% else %}
+                            <span class="badge bg-secondary">หมดเวลาแล้ว</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>s
+    </table>
+
 </div>
 {% endblock %}
