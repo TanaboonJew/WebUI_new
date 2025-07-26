@@ -85,7 +85,7 @@ tr.updated {
               </span>
             </div>
           </td>
-          <td>{{ usage.updated_at|date:"Y-m-d H:i:s" }}</td>
+          <td>{{ usage.user.username }}</td>
           <td>
             <a href="{% url 'allocate-resources' usage.user.id %}" class="btn btn-sm btn-primary">
               Allocate Resources
