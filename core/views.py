@@ -871,6 +871,12 @@ def create_schedule(request, user_id):
             end_datetime__gt=start_dt
         )
 
+        self_future_booking = ContainerSchedule.objects.filter(
+            container=container,
+            active=True,
+            end_datetime__gt=timezone.now()
+        )
+
         if self_future_booking.exists():
             return render(request, 'core/schedule_form.html', {
                 'user': user,
