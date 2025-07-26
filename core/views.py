@@ -825,20 +825,24 @@ def create_schedule(request, user_id):
         start_dt = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
         end_dt = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
 
-        # เช็คว่าเวลาซ้ำกับตารางอื่นหรือไม่
         overlapping = ContainerSchedule.objects.filter(
-            container=container,
             active=True,
-        ).filter(
-            Q(start_datetime__lt=end_dt) & Q(end_datetime__gt=start_dt)
+            start_datetime__lt=end_dt,
+            end_datetime__gt=start_dt
         )
 
-        if overlapping.exists():
+        self_future_booking = ContainerSchedule.objects.filter(
+            container=container,
+            active=True,
+            end_datetime__gt=timezone.now()
+        )
+
+        if overlapping.exists() or self_future_booking.exists():
             return render(request, 'core/schedule_form.html', {
                 'user': user,
                 'container': container,
                 'schedule': container.schedules.first(),
-                'error': 'ช่วงเวลานี้ถูกจองไปแล้ว กรุณาเลือกเวลาอื่น',
+                'error': 'ไม่สามารถจองเวลานี้ได้ เนื่องจากมีการจองอยู่แล้ว',
             })
 
         # ถ้าไม่ซ้อนให้บันทึกได้
