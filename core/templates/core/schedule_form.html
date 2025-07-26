@@ -59,20 +59,44 @@
         </thead>
         <tbody>
             {% for item in upcoming_schedules %}
-                <tr>
-                    <td>{{ item.user.username }}</td>
-                    <td>{{ item.schedule.start_datetime|date:"Y-m-d" }}</td>
-                    <td>{{ item.schedule.start_datetime|time:"H:i" }}</td>
-                    <td>{{ item.schedule.end_datetime|time:"H:i" }}</td>
-                    <td>
-                        {% if item.is_upcoming %}
-                            <span class="badge bg-info">ยังไม่เริ่ม</span>
-                        {% elif item.time_until_end_str %}
-                            <span class="badge bg-success">กำลังใช้งาน</span>
+                {% with schedule=item.schedule %}
+                    <tr class="
+                        {% if item.remaining.total_seconds > 3600 %}
+                            table-success
+                        {% elif item.remaining.total_seconds > 600 %}
+                            table-warning
                         {% else %}
-                            <span class="badge bg-secondary">หมดเวลาแล้ว</span>
+                            table-danger
                         {% endif %}
-                    </td>
+                    ">
+                        <td>{{ schedule.container.user.username }}</td>
+                        <td>{{ schedule.start_datetime|date:"Y-m-d H:i" }}</td>
+                        <td>{{ schedule.end_datetime|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            {% if schedule.container.status == 'running' %}
+                                <span class="badge bg-success">Running</span>
+                            {% elif schedule.container.status == 'stopped' %}
+                                <span class="badge bg-danger">Stopped</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Unknown</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.is_upcoming %}
+                                <span class="text-info">
+                                    <i class="fas fa-clock"></i> Upcoming (starts in {{ item.remaining_str }})
+                                </span>
+                            {% else %}
+                                <span class="text-success">
+                                    <i class="fas fa-play"></i> {{ item.time_until_end_str }} left
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endwith %}
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No active or upcoming schedules.</td>
                 </tr>
             {% endfor %}
         </tbody>

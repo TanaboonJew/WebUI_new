@@ -838,28 +838,31 @@ def create_schedule(request, user_id):
         return redirect('superuser-dashboard')
 
     existing_schedule = container.schedules.first()
-    schedules = ContainerSchedule.objects.select_related('container__user').order_by('start_datetime')
-    now = timezone_now()
+    now = timezone.now()
+
+    schedules = ContainerSchedule.objects.select_related('container__user') \
+        .filter(end_datetime__gte=now) \
+        .order_by('start_datetime')
 
     schedule_with_remaining = []
     for s in schedules:
         if s.start_datetime > now:
-            remaining = s.start_datetime - now
             is_upcoming = True
-            time_until_end = None
+            remaining = s.start_datetime - now
             remaining_str = format_timedelta(remaining)
             time_until_end_str = None
         else:
-            remaining = timedelta(seconds=0)
             is_upcoming = False
-            time_until_end = s.end_datetime - now
-            if time_until_end.total_seconds() < 0:
-                time_until_end = timedelta(seconds=0)
-            time_until_end_str = format_timedelta(time_until_end)
+            remaining = s.end_datetime - now
+            if remaining.total_seconds() < 0:
+                remaining = timedelta(seconds=0)
+            time_until_end_str = format_timedelta(remaining)
             remaining_str = None
 
         schedule_with_remaining.append({
             'schedule': s,
+            'user': s.container.user,
+            'remaining': remaining,
             'remaining_str': remaining_str,
             'is_upcoming': is_upcoming,
             'time_until_end_str': time_until_end_str,
