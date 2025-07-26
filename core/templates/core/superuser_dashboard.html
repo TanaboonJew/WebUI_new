@@ -120,15 +120,14 @@ tr.updated {
         </tr>
         {% endfor %}
       </tbody>
-      <tfoot>
-        <tr class="table-secondary fw-bold">
+      <tfoot class="table-secondary fw-bold">
+        <tr>
           <td>Total</td>
           <td>{{ total_jupyter_running }}</td>
-          <td>{{ total_used_ram_mb }} MB</td>
-          <td>{{ total_cpu_usage }}%</td>
+          <td>{{ total_ram_usage_mb }} MB</td>
+          <td>{{ average_cpu_percent }}%</td>
           <td>{{ total_gpu_memory_mb }} MB</td>
-          <td>{{ last_updated|date:"Y-m-d H:i:s" }}</td>
-          <td colspan="3"></td>  <!-- สำหรับ Allocate, Pause, Schedule -->
+          <td colspan="4"></td>
         </tr>
       </tfoot>
     </table>
