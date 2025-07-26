@@ -622,6 +622,9 @@ def superuser_dashboard(request):
 
     cpu_list = [u['cpu_usage'] for u in usages if u['docker_status'] == 'running']
     average_cpu_percent = round(sum(cpu_list) / len(cpu_list), 2) if cpu_list else 0
+    
+    num_verified_users = User.objects.filter(role='verify').count()
+    num_users_with_container = sum(1 for u in usages if u['container'] is not None)
 
     return render(request, 'core/superuser_dashboard.html', {
         'usages': usages,
@@ -629,6 +632,8 @@ def superuser_dashboard(request):
         'total_ram_usage_mb': round(total_ram_usage_mb, 2),
         'total_gpu_memory_mb': total_gpu_memory_mb,
         'average_cpu_percent': average_cpu_percent,
+        'num_verified_users': num_verified_users,
+        'num_users_with_container': num_users_with_container,
     })
 
 def api_usage_data(request):

@@ -25,8 +25,8 @@ tr.updated {
           <th>CPU (%)</th>
           <th>GPU Memory (MB)</th>
           <th>Role</th>
-          <th>Allocate</th>
           <th>Pause</th>
+          <th>Allocate</th>
           <th>Schedule</th>
         </tr>
       </thead>
@@ -91,11 +91,6 @@ tr.updated {
             <td>{{ usage.user.role }}</td>
           {% endif %}
           <td>
-            <a href="{% url 'allocate-resources' usage.user.id %}" class="btn btn-sm btn-primary">
-              Allocate Resources
-            </a>
-          </td>
-          <td>
             {% if request.user.is_superuser and usage.container %}
               {% if usage.docker_status == "running" %}
                 <form method="post" action="{% url 'admin-stop-container' usage.container.id %}" style="display:inline;">
@@ -117,6 +112,11 @@ tr.updated {
             {% endif %}
           </td>
           <td>
+            <a href="{% url 'allocate-resources' usage.user.id %}" class="btn btn-sm btn-primary">
+              Allocate Resources
+            </a>
+          </td>
+          <td>
             <a href="{% url 'create_schedule' usage.user.id %}" class="btn btn-sm btn-primary">
               Schedule
             </a>
@@ -131,7 +131,9 @@ tr.updated {
           <td>{{ total_ram_usage_mb }} MB</td>
           <td>{{ average_cpu_percent }}%</td>
           <td>{{ total_gpu_memory_mb }} MB</td>
-          <td colspan="4"></td>
+          <td>{{ num_verified_users }} verified</td>
+          <td>{{ num_users_with_container }} with container</td>
+          <td colspan="2"></td>
         </tr>
       </tfoot>
     </table>
