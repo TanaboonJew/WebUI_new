@@ -804,70 +804,15 @@ def admin_stop_container_view(request, container_id):
         messages.error(request, "Failed to stop container.")
     return redirect('superuser-dashboard')
 
-@staff_member_required
-def create_schedule(request, user_id):
-    user = get_object_or_404(CustomUser, id=user_id)
-    container = DockerContainer.objects.filter(user=user).first()
+def format_timedelta(td):
+    total_seconds = int(td.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours} ชั่วโมง {minutes} นาที {seconds} วินาที"
 
-    if not container:
-        return render(request, 'core/schedule_form.html', {'error': 'User has no container.'})
 
-    if request.method == 'POST':
-        start_date = request.POST['start_date']
-        start_time = request.POST['start_time']
-        end_date = request.POST['end_date']
-        end_time = request.POST['end_time']
-        active = 'active' in request.POST
-
-        start_dt_str = f"{start_date} {start_time}"
-        end_dt_str = f"{end_date} {end_time}"
-
-        start_dt = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
-        end_dt = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
-
-        overlapping = ContainerSchedule.objects.filter(
-            active=True,
-            start_datetime__lt=end_dt,
-            end_datetime__gt=start_dt
-        )
-
-        self_future_booking = ContainerSchedule.objects.filter(
-            container=container,
-            active=True,
-            end_datetime__gt=timezone.now()
-        )
-
-        if overlapping.exists() or self_future_booking.exists():
-            return render(request, 'core/schedule_form.html', {
-                'user': user,
-                'container': container,
-                'schedule': container.schedules.first(),
-                'error': 'ไม่สามารถจองเวลานี้ได้ เนื่องจากมีการจองอยู่แล้ว',
-            })
-
-        # ถ้าไม่ซ้อนให้บันทึกได้
-        ContainerSchedule.objects.update_or_create(
-            container=container,
-            defaults={
-                'start_datetime': start_dt,
-                'end_datetime': end_dt,
-                'active': active,
-            }
-        )
-
-        reload_schedules()
-
-        return redirect('superuser-dashboard')
-
-    existing_schedule = container.schedules.first()
+def get_upcoming_schedules():
     now = timezone.now()
-    
-    def format_timedelta(td):
-        total_seconds = int(td.total_seconds())
-        hours, remainder = divmod(total_seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        return f"{hours} ชั่วโมง {minutes} นาที {seconds} วินาที"
-
     schedules = ContainerSchedule.objects.select_related('container__user') \
         .filter(end_datetime__gte=now) \
         .order_by('start_datetime')
@@ -896,9 +841,68 @@ def create_schedule(request, user_id):
             'time_until_end_str': time_until_end_str,
         })
 
+    return schedule_with_remaining
+
+@staff_member_required
+def create_schedule(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    container = DockerContainer.objects.filter(user=user).first()
+
+    if not container:
+        return render(request, 'core/schedule_form.html', {
+            'error': 'User has no container.',
+            'user': user,
+            'upcoming_schedules': get_upcoming_schedules(),
+        })
+
+    if request.method == 'POST':
+        start_date = request.POST['start_date']
+        start_time = request.POST['start_time']
+        end_date = request.POST['end_date']
+        end_time = request.POST['end_time']
+        active = 'active' in request.POST
+
+        start_dt = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M")
+        end_dt = datetime.strptime(f"{end_date} {end_time}", "%Y-%m-%d %H:%M")
+
+        overlapping = ContainerSchedule.objects.filter(
+            active=True,
+            start_datetime__lt=end_dt,
+            end_datetime__gt=start_dt
+        )
+
+        self_future_booking = ContainerSchedule.objects.filter(
+            container=container,
+            active=True,
+            end_datetime__gt=timezone.now()
+        )
+
+        if overlapping.exists() or self_future_booking.exists():
+            return render(request, 'core/schedule_form.html', {
+                'user': user,
+                'container': container,
+                'schedule': container.schedules.first(),
+                'upcoming_schedules': get_upcoming_schedules(),
+                'error': 'ไม่สามารถจองเวลานี้ได้ เนื่องจากมีการจองอยู่แล้ว',
+            })
+
+        # ถ้าไม่ซ้ำให้บันทึกได้
+        ContainerSchedule.objects.update_or_create(
+            container=container,
+            defaults={
+                'start_datetime': start_dt,
+                'end_datetime': end_dt,
+                'active': active,
+            }
+        )
+
+        reload_schedules()
+        return redirect('superuser-dashboard')
+
+    # GET method
     return render(request, 'core/schedule_form.html', {
         'user': user,
         'container': container,
-        'schedule': existing_schedule,
-        'upcoming_schedules': schedule_with_remaining,
+        'schedule': container.schedules.first(),
+        'upcoming_schedules': get_upcoming_schedules(),
     })
