@@ -24,7 +24,7 @@ tr.updated {
           <th>Memory Usage</th>
           <th>CPU (%)</th>
           <th>GPU Memory (MB)</th>
-          <th>Last Updated</th>
+          <th>Role</th>
           <th>Allocate</th>
           <th>Pause</th>
           <th>Schedule</th>
@@ -85,7 +85,11 @@ tr.updated {
               </span>
             </div>
           </td>
-          <td>{{ usage.user.role }}</td>
+          {% if usage.user.is_superuser %}
+            <td>Admin</td>
+          {% else %}
+            <td>{{ usage.user.role }}</td>
+          {% endif %}
           <td>
             <a href="{% url 'allocate-resources' usage.user.id %}" class="btn btn-sm btn-primary">
               Allocate Resources
