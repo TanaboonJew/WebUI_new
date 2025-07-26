@@ -594,10 +594,16 @@ def superuser_dashboard(request):
             gpu_memory_mb = 0
             gpu_memory_percent = 0
 
-        # Convert RAM usage to MB
-        mem_limit_mb = user.mem_limit  # already in MB
+        mem_limit_mb = user.mem_limit
         used_ram_mb = round(memory_usage / (1024 * 1024), 2)
         ram_usage_percent = round((used_ram_mb / mem_limit_mb) * 100, 1) if mem_limit_mb > 0 else 0
+
+        if jupyter_status == 'running':
+            total_jupyter_running += 1
+
+        total_used_ram_mb += used_ram_mb
+        total_cpu_usage += cpu_usage
+        total_gpu_memory_mb += gpu_memory_mb
 
         usage = {
             'user': user,
@@ -616,7 +622,16 @@ def superuser_dashboard(request):
 
         usages.append(usage)
 
-    return render(request, 'core/superuser_dashboard.html', {'usages': usages})
+    context = {
+        'usages': usages,
+        'total_jupyter_running': total_jupyter_running,
+        'total_used_ram_mb': total_used_ram_mb,
+        'total_cpu_usage': round(total_cpu_usage, 2),
+        'total_gpu_memory_mb': total_gpu_memory_mb,
+        'last_updated': timezone.now()
+    }
+
+    return render(request, 'core/superuser_dashboard.html', context)
 
 def api_usage_data(request):
     if not request.user.is_superuser:
