@@ -871,19 +871,22 @@ def create_schedule(request, user_id):
             end_datetime__gt=start_dt
         )
 
-        self_future_booking = ContainerSchedule.objects.filter(
-            container=container,
-            active=True,
-            end_datetime__gt=timezone.now()
-        )
-
-        if overlapping.exists() or self_future_booking.exists():
+        if self_future_booking.exists():
             return render(request, 'core/schedule_form.html', {
                 'user': user,
                 'container': container,
                 'schedule': container.schedules.first(),
                 'upcoming_schedules': get_upcoming_schedules(),
-                'error': 'ไม่สามารถจองเวลานี้ได้ เนื่องจากมีการจองอยู่แล้ว',
+                'error': 'คุณไม่สามารถจองเวลาใหม่ได้จนกว่าจะถึงเวลาสิ้นสุดของการจองก่อนหน้า',
+            })
+
+        if overlapping.exists():
+            return render(request, 'core/schedule_form.html', {
+                'user': user,
+                'container': container,
+                'schedule': container.schedules.first(),
+                'upcoming_schedules': get_upcoming_schedules(),
+                'error': 'ช่วงเวลานี้มีผู้ใช้คนอื่นจองอยู่แล้ว กรุณาเลือกช่วงเวลาอื่น',
             })
 
         # ถ้าไม่ซ้ำให้บันทึกได้
