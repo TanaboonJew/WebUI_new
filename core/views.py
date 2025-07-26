@@ -857,6 +857,12 @@ def create_schedule(request, user_id):
 
     existing_schedule = container.schedules.first()
     now = timezone.now()
+    
+    def format_timedelta(td):
+        total_seconds = int(td.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours} ชั่วโมง {minutes} นาที {seconds} วินาที"
 
     schedules = ContainerSchedule.objects.select_related('container__user') \
         .filter(end_datetime__gte=now) \
