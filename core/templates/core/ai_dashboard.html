@@ -15,7 +15,7 @@
                         <span class="badge bg-success">Running</span>
                     {% elif container.status == 'exited' %}
                         <span class="badge bg-danger">Stopped</span>
-                    {% elif schedule.container.status == 'paused' %}
+                    {% elif container.status == 'paused' %}
                         <span class="badge bg-danger">Paused</span>
                     {% else %}
                         <span class="badge bg-secondary">Unknown</span>
