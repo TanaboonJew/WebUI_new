@@ -871,6 +871,7 @@ def create_schedule(request, user_id):
             end_datetime__gt=start_dt
         )
 
+        now = timezone.now()
         self_active_booking = ContainerSchedule.objects.filter(
             container=container,
             active=True,
