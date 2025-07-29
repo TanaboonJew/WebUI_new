@@ -15,6 +15,8 @@
                         <span class="badge bg-success">Running</span>
                     {% elif container.status == 'exited' %}
                         <span class="badge bg-danger">Stopped</span>
+                    {% elif schedule.container.status == 'paused' %}
+                        <span class="badge bg-danger">Paused</span>
                     {% else %}
                         <span class="badge bg-secondary">Unknown</span>
                     {% endif %}
@@ -22,7 +24,7 @@
                 </div>
                 <div class="card-body" id="action-area" data-accessible="{{ user.is_accessible|yesno:"ture,false" }}">
 
-                    {% if container.status == 'running' or container.status == 'exited'%}
+                    {% if container.status == 'running' or container.status == 'exited' or container.status == 'paused'%}
                         <div class="alert alert-success">
                             {% if container.status == 'running'%}
                                 Notebook is running!<br>

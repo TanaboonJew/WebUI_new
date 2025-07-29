@@ -20,9 +20,9 @@ def stop_all_except(scheduler_user):
         try:
             docker_container = client.containers.get(container.container_id)
             if docker_container.status == 'running':
-                docker_container.stop()
-                logger.info(f"[Scheduler] Stopped container {container.container_id} for user {container.user.username}")
-            container.status = 'stopped'
+                docker_container.pause()
+                logger.info(f"[Scheduler] Paused container {container.container_id} for user {container.user.username}")
+            container.status = 'paused'
             container.save()
         except Exception as e:
             logger.error(f"[Scheduler][Error] Failed to stop container {container.container_id}: {e}")
@@ -38,9 +38,11 @@ def reset_access_and_restart():
     for container in DockerContainer.objects.all():
         try:
             docker_container = client.containers.get(container.container_id)
-            if container.status == 'running':
-                docker_container.start()
-                logger.info(f"[Scheduler] Restarted container {container.container_id} for user {container.user.username}")
+            if container.status == 'paused':
+                docker_container.unpause()
+                logger.info(f"[Scheduler] Unpaused container {container.container_id} for user {container.user.username}")
+                container.status = 'running'
+                container.save()
         except Exception as e:
             logger.error(f"[Scheduler][Error] Failed to restart container {container.container_id}: {e}")
 
