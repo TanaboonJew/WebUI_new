@@ -194,9 +194,18 @@ class DockerManager:
 
             elif action == 'delete':
                 container.remove(force=True)
-                
+
+                dirs = self._prepare_user_directories(user)
+                for label, path in dirs.items():
+                    if os.path.exists(path):
+                        try:
+                            shutil.rmtree(path)
+                            logger.info(f"Deleted mount dir: {label} at {path}")
+                        except Exception as e:
+                            logger.error(f"Failed to delete {label} at {path}: {e}")
+
                 self._delete_user_workspace(user)
-                
+
                 if db_container:
                     db_container.delete()
                 logger.info(f"Deleted container {container_name}")
