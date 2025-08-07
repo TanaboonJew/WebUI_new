@@ -10,8 +10,6 @@ from django.conf import settings
 from .models import DockerContainer, CustomUser
 import logging
 import subprocess
-import errno
-import stat
 
 logger = logging.getLogger(__name__)
 
@@ -101,23 +99,15 @@ class DockerManager:
             return None, str(e)
 
     def _clear_user_mount_dirs(self, dirs: Dict[str, str]):
-        for path in [dirs['data'], dirs['models'], dirs['jupyter']]:
+        for path in [dirs['data'], dirs['models']]:
             if os.path.exists(path):
-                shutil.rmtree(path, onerror=self._handle_remove_readonly)
-            os.makedirs(path, exist_ok=True)
-                
-    def _handle_remove_readonly(self, func, path, exc):
-        excvalue = exc[1]
-        if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == errno.EACCES:
-            os.chmod(path, stat.S_IWRITE)
-            func(path)
-        else:
-            raise
+                shutil.rmtree(path)
+                os.makedirs(path, exist_ok=True)
                 
     def _delete_user_workspace(self, user: CustomUser):
         user_dir = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}_{user.username}')
         if os.path.exists(user_dir):
-            shutil.rmtree(user_dir, onerror=self._handle_remove_readonly)
+            shutil.rmtree(user_dir, ignore_errors=True)
 
     def create_container(self, user: CustomUser, image_name: str, container_type: str = 'default') -> Tuple[Optional[str], Optional[str]]:
         if not self.client:
@@ -204,18 +194,9 @@ class DockerManager:
 
             elif action == 'delete':
                 container.remove(force=True)
-
-                dirs = self._prepare_user_directories(user)
-                for label, path in dirs.items():
-                    if os.path.exists(path):
-                        try:
-                            shutil.rmtree(path)
-                            logger.info(f"Deleted mount dir: {label} at {path}")
-                        except Exception as e:
-                            logger.error(f"Failed to delete {label} at {path}: {e}")
-
+                
                 self._delete_user_workspace(user)
-
+                
                 if db_container:
                     db_container.delete()
                 logger.info(f"Deleted container {container_name}")
