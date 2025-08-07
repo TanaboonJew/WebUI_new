@@ -10,6 +10,8 @@ from django.conf import settings
 from .models import DockerContainer, CustomUser
 import logging
 import subprocess
+import errno
+import stat
 
 logger = logging.getLogger(__name__)
 
@@ -99,15 +101,23 @@ class DockerManager:
             return None, str(e)
 
     def _clear_user_mount_dirs(self, dirs: Dict[str, str]):
-        for path in [dirs['data'], dirs['models']]:
+        for path in [dirs['data'], dirs['models'], dirs['jupyter']]:
             if os.path.exists(path):
-                shutil.rmtree(path)
-                os.makedirs(path, exist_ok=True)
+                shutil.rmtree(path, onerror=self._handle_remove_readonly)
+            os.makedirs(path, exist_ok=True)
+                
+    def _handle_remove_readonly(self, func, path, exc):
+        excvalue = exc[1]
+        if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == errno.EACCES:
+            os.chmod(path, stat.S_IWRITE)
+            func(path)
+        else:
+            raise
                 
     def _delete_user_workspace(self, user: CustomUser):
         user_dir = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}_{user.username}')
         if os.path.exists(user_dir):
-            shutil.rmtree(user_dir, ignore_errors=True)
+            shutil.rmtree(user_dir, onerror=self._handle_remove_readonly)
 
     def create_container(self, user: CustomUser, image_name: str, container_type: str = 'default') -> Tuple[Optional[str], Optional[str]]:
         if not self.client:
